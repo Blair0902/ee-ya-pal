@@ -415,6 +415,7 @@ const Home = () => {
     return () => {
       if (bubbleTimer.current) window.clearTimeout(bubbleTimer.current);
       if (moodTimer.current) window.clearTimeout(moodTimer.current);
+      if (bigActionTimer.current) window.clearTimeout(bigActionTimer.current);
     };
   }, []);
 
