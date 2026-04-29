@@ -1,10 +1,25 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, Coins, Sparkles, MessageCircleHeart, Compass, Sparkle, ChevronRight } from "lucide-react";
+import {
+  Heart,
+  Coins,
+  Sparkles,
+  MessageCircleHeart,
+  Compass,
+  Sparkle,
+  ChevronRight,
+  Hand,
+  Bone,
+  Music2,
+} from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import petIdle from "@/assets/pet-idle.png";
 import petHappy from "@/assets/pet-happy.png";
 import petLaugh from "@/assets/pet-laugh.png";
+import petJump from "@/assets/pet-jump.png";
+import petSleep from "@/assets/pet-sleep.png";
+import petCurious from "@/assets/pet-curious.png";
+import petLove from "@/assets/pet-love.png";
 import { cn } from "@/lib/utils";
 
 /* -------------------- 问候语库 -------------------- */
@@ -15,20 +30,20 @@ const GREETINGS = {
   night: ["有点困啦…", "今天也辛苦啦", "晚安前再陪我一下下？", "数小羊的时间到啦", "今天过得开心吗？", "梦里见呀", "我陪你一会儿就睡觉觉"],
 };
 
-const PET_LINES_PET = [
-  "嘿嘿好舒服～",
-  "你的手好温柔呀",
-  "再摸一下嘛！",
-  "我最喜欢你啦",
-  "心都化掉啦",
-  "嗯～舒服",
-];
-const PET_LINES_BELLY = [
-  "哈哈哈哈！痒死啦！",
-  "啊哈哈不要不要～",
-  "嘻嘻嘻笑得我打嗝啦",
-  "肚子被发现了！哈哈哈",
-];
+/* -------------------- 互动台词 -------------------- */
+const LINES = {
+  head: ["嘿嘿好舒服～", "你的手好温柔呀", "再摸一下嘛！", "我最喜欢你啦", "心都化掉啦", "嗯～舒服"],
+  belly: ["哈哈哈哈！痒死啦！", "啊哈哈不要不要～", "嘻嘻嘻笑得我打嗝啦", "肚子被发现了！哈哈哈"],
+  back: ["嗯～背背好舒服", "再顺一点点～", "毛要被摸顺啦"],
+  tail: ["哎呀！尾巴！", "我的尾巴最敏感啦", "嘿，别揪嘛～"],
+  call: ["汪汪！我在这儿！", "嘿，你叫我？", "来啦来啦！"],
+  jump: ["看我跳得高不高！", "蹦蹦蹦！", "耶！开心！"],
+  curious: ["嗯？那是什么呀？", "咦——", "我想想看…"],
+  love: ["最喜欢你啦💕", "你是我的全世界", "心动的感觉～"],
+  yawn: ["呼啊～有点困了", "想打个小盹～", "陪我睡一会嘛"],
+};
+
+const pickLine = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
 type TimeBand = keyof typeof GREETINGS;
 const getTimeBand = (): TimeBand => {
@@ -59,54 +74,34 @@ type Suggestion = {
 const buildSuggestions = (chattedToday: boolean, hasQuiz: boolean, intimacy: number): Suggestion[] => {
   const list: Suggestion[] = [];
   if (!chattedToday) {
-    list.push({
-      id: "chat",
-      emoji: "💬",
-      title: "今天还没和我说话呢",
-      desc: "我有好多悄悄话想告诉你～",
-      cta: "去聊聊",
-      to: "/chat",
-      tone: "primary",
-    });
+    list.push({ id: "chat", emoji: "💬", title: "今天还没和我说话呢", desc: "我有好多悄悄话想告诉你～", cta: "去聊聊", to: "/chat", tone: "primary" });
   }
   if (hasQuiz) {
-    list.push({
-      id: "quiz",
-      emoji: "🧭",
-      title: "新关卡解锁啦！",
-      desc: "去森林小屋找找有什么宝贝",
-      cta: "去冒险",
-      to: "/quiz",
-      tone: "secondary",
-    });
+    list.push({ id: "quiz", emoji: "🧭", title: "新关卡解锁啦！", desc: "去森林小屋找找有什么宝贝", cta: "去冒险", to: "/quiz", tone: "secondary" });
   }
   if (intimacy >= 60) {
-    list.push({
-      id: "secret",
-      emoji: "💖",
-      title: "我有个悄悄话…",
-      desc: "凑过来一点，只告诉你一个人",
-      cta: "听听看",
-      to: "/chat",
-      tone: "accent",
-    });
+    list.push({ id: "secret", emoji: "💖", title: "我有个悄悄话…", desc: "凑过来一点，只告诉你一个人", cta: "听听看", to: "/chat", tone: "accent" });
   }
   if (list.length === 0) {
-    list.push({
-      id: "play",
-      emoji: "🎈",
-      title: "一起玩个小游戏吧",
-      desc: "今天的小冒险等你一起",
-      cta: "去看看",
-      to: "/quiz",
-      tone: "primary",
-    });
+    list.push({ id: "play", emoji: "🎈", title: "一起玩个小游戏吧", desc: "今天的小冒险等你一起", cta: "去看看", to: "/quiz", tone: "primary" });
   }
   return list;
 };
 
 /* -------------------- 飘心动画 -------------------- */
-type FloatingHeart = { id: number; x: number };
+type FloatingThing = { id: number; x: number; emoji?: string };
+
+type Mood = "idle" | "happy" | "laugh" | "jump" | "sleep" | "curious" | "love";
+
+const MOOD_TO_IMG: Record<Mood, string> = {
+  idle: petIdle,
+  happy: petHappy,
+  laugh: petLaugh,
+  jump: petJump,
+  sleep: petSleep,
+  curious: petCurious,
+  love: petLove,
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -123,13 +118,14 @@ const Home = () => {
   const [petTodayCount, setPetTodayCount] = useState(0);
   const PET_DAILY_LIMIT = 5;
 
-  // 宠物表情：idle / happy / laugh
-  const [mood, setMood] = useState<"idle" | "happy" | "laugh">("idle");
+  const [mood, setMood] = useState<Mood>("idle");
   const [bubble, setBubble] = useState<string | null>(null);
-  const [hearts, setHearts] = useState<FloatingHeart[]>([]);
-  const heartIdRef = useRef(0);
+  const [hearts, setHearts] = useState<FloatingThing[]>([]);
+  const [floats, setFloats] = useState<FloatingThing[]>([]);
+  const fxIdRef = useRef(0);
   const bubbleTimer = useRef<number | null>(null);
   const moodTimer = useRef<number | null>(null);
+  const lastInteractionRef = useRef<number>(Date.now());
 
   // 推荐卡片
   const [chattedToday] = useState(false);
@@ -153,40 +149,123 @@ const Home = () => {
     touchStartY.current = null;
   };
 
-  const showBubble = (text: string) => {
+  const showBubble = useCallback((text: string) => {
     setBubble(text);
     if (bubbleTimer.current) window.clearTimeout(bubbleTimer.current);
     bubbleTimer.current = window.setTimeout(() => setBubble(null), 2200);
-  };
+  }, []);
 
-  const setMoodFor = (m: "happy" | "laugh", ms: number) => {
+  const setMoodFor = useCallback((m: Mood, ms: number) => {
     setMood(m);
     if (moodTimer.current) window.clearTimeout(moodTimer.current);
     moodTimer.current = window.setTimeout(() => setMood("idle"), ms);
-  };
+  }, []);
+
+  const spawnFx = useCallback((emoji?: string, count = 1) => {
+    for (let i = 0; i < count; i++) {
+      const id = ++fxIdRef.current;
+      const x = 35 + Math.random() * 30;
+      const item = { id, x, emoji };
+      if (emoji) {
+        setFloats((fs) => [...fs, item]);
+        window.setTimeout(() => setFloats((fs) => fs.filter((f) => f.id !== id)), 1100);
+      } else {
+        setHearts((hs) => [...hs, item]);
+        window.setTimeout(() => setHearts((hs) => hs.filter((h) => h.id !== id)), 1000);
+      }
+    }
+  }, []);
+
+  const markInteraction = () => (lastInteractionRef.current = Date.now());
 
   // 摸头：数值互动
   const onPatHead = () => {
-    const line = PET_LINES_PET[Math.floor(Math.random() * PET_LINES_PET.length)];
-    showBubble(line);
-    setMoodFor("happy", 1300);
+    markInteraction();
+    showBubble(pickLine(LINES.head));
+    setMoodFor("happy", 1400);
     if (petTodayCount < PET_DAILY_LIMIT) {
       setPetTodayCount((c) => c + 1);
       setIntimacy((v) => Math.min(100, v + 1));
-      // 飘爱心
-      const id = ++heartIdRef.current;
-      const x = 40 + Math.random() * 20;
-      setHearts((hs) => [...hs, { id, x }]);
-      window.setTimeout(() => setHearts((hs) => hs.filter((h) => h.id !== id)), 1000);
+      spawnFx(undefined, 1);
     }
   };
 
-  // 摸肚子：纯情感互动
+  // 摸肚子：纯情感
   const onPatBelly = () => {
-    const line = PET_LINES_BELLY[Math.floor(Math.random() * PET_LINES_BELLY.length)];
-    showBubble(line);
-    setMoodFor("laugh", 1800);
+    markInteraction();
+    showBubble(pickLine(LINES.belly));
+    setMoodFor("laugh", 1900);
   };
+
+  // 摸背
+  const onPatBack = () => {
+    markInteraction();
+    showBubble(pickLine(LINES.back));
+    setMoodFor("happy", 1200);
+  };
+
+  // 揪尾巴
+  const onPokeTail = () => {
+    markInteraction();
+    showBubble(pickLine(LINES.tail));
+    setMoodFor("curious", 1200);
+    spawnFx("✨", 2);
+  };
+
+  // 呼叫（按钮）：跳一下
+  const onCall = () => {
+    markInteraction();
+    showBubble(pickLine(LINES.call));
+    setMoodFor("jump", 1400);
+    spawnFx("✨", 3);
+  };
+
+  // 喂零食：表白
+  const onFeed = () => {
+    markInteraction();
+    showBubble(pickLine(LINES.love));
+    setMoodFor("love", 1800);
+    spawnFx(undefined, 3);
+    if (petTodayCount < PET_DAILY_LIMIT) {
+      setIntimacy((v) => Math.min(100, v + 2));
+      setPetTodayCount((c) => c + 1);
+    }
+  };
+
+  // 唱歌：好奇
+  const onSing = () => {
+    markInteraction();
+    showBubble("听～好好听！");
+    setMoodFor("curious", 1500);
+    spawnFx("🎵", 3);
+  };
+
+  // 自发动作：闲置 6s 后随机做个小动作
+  useEffect(() => {
+    const tick = window.setInterval(() => {
+      if (mood !== "idle") return;
+      if (Date.now() - lastInteractionRef.current < 6000) return;
+      const h = new Date().getHours();
+      const isLate = h >= 21 || h < 6;
+      const pool: Array<{ m: Mood; line: string; ms: number; fx?: string }> = isLate
+        ? [
+            { m: "sleep", line: pickLine(LINES.yawn), ms: 2400 },
+            { m: "curious", line: pickLine(LINES.curious), ms: 1500 },
+          ]
+        : [
+            { m: "curious", line: pickLine(LINES.curious), ms: 1500 },
+            { m: "jump", line: pickLine(LINES.jump), ms: 1400, fx: "✨" },
+            { m: "love", line: pickLine(LINES.love), ms: 1700 },
+            { m: "happy", line: "嘿嘿～", ms: 1300 },
+          ];
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      showBubble(pick.line);
+      setMoodFor(pick.m, pick.ms);
+      if (pick.fx) spawnFx(pick.fx, 2);
+      lastInteractionRef.current = Date.now();
+    }, 3500);
+    return () => window.clearInterval(tick);
+  }, [mood, showBubble, setMoodFor, spawnFx]);
 
   useEffect(() => {
     return () => {
@@ -195,8 +274,19 @@ const Home = () => {
     };
   }, []);
 
-  const petSrc = mood === "laugh" ? petLaugh : mood === "happy" ? petHappy : petIdle;
+  const petSrc = MOOD_TO_IMG[mood];
   const intimacyMaxed = intimacy >= 100;
+
+  // 动画类
+  const petAnimClass = cn(
+    mood === "idle" && "animate-float",
+    mood === "happy" && "animate-pop-bounce",
+    mood === "laugh" && "animate-wiggle",
+    mood === "jump" && "animate-jump-up",
+    mood === "curious" && "animate-shake-x",
+    mood === "love" && "animate-pop-bounce",
+    mood === "sleep" && "animate-float",
+  );
 
   return (
     <PhoneShell>
@@ -207,9 +297,7 @@ const Home = () => {
       >
         {/* 顶栏：徽章 */}
         <header className="flex items-center justify-between pt-4">
-          <div className="flex items-center gap-2">
-            <Badge tone="level" icon={<Sparkles className="h-3.5 w-3.5" />} text={`Lv.${level}`} />
-          </div>
+          <Badge tone="level" icon={<Sparkles className="h-3.5 w-3.5" />} text={`Lv.${level}`} />
           <div className="flex items-center gap-2">
             <IntimacyBadge value={intimacy} maxed={intimacyMaxed} />
             <Badge tone="coin" icon={<Coins className="h-3.5 w-3.5" />} text={String(coins)} />
@@ -222,16 +310,15 @@ const Home = () => {
         </h1>
 
         {/* 宠物舞台 */}
-        <section className="relative mt-3 flex h-[58vh] min-h-[420px] items-end justify-center">
+        <section className="relative mt-2 flex h-[56vh] min-h-[400px] items-end justify-center">
           {/* 远景光晕 */}
           <div className="pointer-events-none absolute left-1/2 top-6 h-72 w-72 -translate-x-1/2 rounded-full bg-primary-soft opacity-60 blur-3xl" />
-
           {/* 地面光圈 */}
           <div className="absolute bottom-10 h-6 w-44 rounded-full bg-foreground/10 blur-md" />
 
           {/* 气泡 */}
           {bubble && (
-            <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2 animate-scale-in">
+            <div className="absolute left-1/2 top-2 z-30 -translate-x-1/2 animate-scale-in">
               <div className="relative max-w-[260px] rounded-3xl bg-card px-4 py-2.5 text-center font-display text-sm font-bold text-foreground shadow-card">
                 {bubble}
                 <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-card" />
@@ -249,47 +336,79 @@ const Home = () => {
               <Heart className="h-7 w-7 fill-heart text-heart drop-shadow-md" />
             </div>
           ))}
+          {/* 飘 emoji */}
+          {floats.map((f) => (
+            <div
+              key={f.id}
+              className="pointer-events-none absolute bottom-36 z-30 animate-heart-burst text-2xl"
+              style={{ left: `${f.x}%` }}
+            >
+              {f.emoji}
+            </div>
+          ))}
 
-          {/* 宠物本体 — 上半部分（头）摸 → 加亲密度；下半部分（肚子）摸 → 笑倒 */}
-          <div className="relative z-10 h-[420px] w-[320px] animate-float">
+          {/* 宠物本体 — 多分区交互 */}
+          <div className="relative z-10 h-[400px] w-[300px]">
+            <div className={cn("h-full w-full transition-transform", petAnimClass)}>
+              <img
+                src={petSrc}
+                alt="小伊呀"
+                width={1024}
+                height={1024}
+                className="h-full w-full select-none object-contain drop-shadow-[0_30px_30px_hsl(28_60%_40%/0.25)] transition-all duration-300"
+                draggable={false}
+              />
+            </div>
+
+            {/* 头部点击区 */}
             <button
               type="button"
               onClick={onPatHead}
               aria-label="摸摸头"
-              className="absolute inset-x-0 top-0 z-20 h-[55%] w-full rounded-t-[40%] active:scale-[0.98]"
+              className="absolute left-1/2 top-[6%] z-20 h-[28%] w-[55%] -translate-x-1/2 rounded-[50%] active:scale-[0.97]"
             />
+            {/* 脸/胡子 */}
+            <button
+              type="button"
+              onClick={onPatBack}
+              aria-label="顺顺毛"
+              className="absolute left-1/2 top-[30%] z-20 h-[18%] w-[60%] -translate-x-1/2 rounded-[40%] active:scale-[0.97]"
+            />
+            {/* 肚子（中下） */}
             <button
               type="button"
               onClick={onPatBelly}
-              aria-label="摸摸肚子"
-              className="absolute inset-x-0 bottom-0 z-20 h-[45%] w-full rounded-b-[40%] active:scale-[0.98]"
+              aria-label="挠挠肚子"
+              className="absolute left-1/2 top-[52%] z-20 h-[30%] w-[55%] -translate-x-1/2 rounded-[40%] active:scale-[0.97]"
             />
-            <img
-              src={petSrc}
-              alt="小伊呀"
-              width={320}
-              height={420}
-              className={cn(
-                "h-full w-full select-none object-contain drop-shadow-[0_30px_30px_hsl(28_60%_40%/0.25)] transition-all duration-300",
-                mood === "happy" && "animate-pop-bounce",
-                mood === "laugh" && "animate-wiggle",
-              )}
-              draggable={false}
+            {/* 尾巴（左下角） */}
+            <button
+              type="button"
+              onClick={onPokeTail}
+              aria-label="碰碰尾巴"
+              className="absolute bottom-[8%] left-[2%] z-20 h-[22%] w-[26%] rounded-full active:scale-[0.97]"
             />
           </div>
 
           {/* 提示 */}
-          <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 text-center font-display text-[11px] font-bold tracking-wide text-muted-foreground">
+          <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 text-center font-display text-[11px] font-bold tracking-wide text-muted-foreground">
             <Sparkle className="mr-1 inline h-3 w-3 -translate-y-0.5" />
-            摸摸头 · 挠挠肚子
+            摸头 · 顺毛 · 挠肚 · 碰尾巴
           </div>
         </section>
+
+        {/* 动作工具条 */}
+        <div className="mt-1 flex items-center justify-center gap-3">
+          <ActionButton label="呼叫" icon={<Hand className="h-5 w-5" />} onClick={onCall} tone="primary" />
+          <ActionButton label="喂零食" icon={<Bone className="h-5 w-5" />} onClick={onFeed} tone="accent" />
+          <ActionButton label="唱歌" icon={<Music2 className="h-5 w-5" />} onClick={onSing} tone="secondary" />
+        </div>
 
         {/* 推荐卡片 */}
         <SuggestionCard suggestion={suggestion} onGo={() => navigate(suggestion.to)} />
 
         {/* 下拉换卡片提示 */}
-        <p className="mt-3 text-center font-display text-[11px] font-semibold text-muted-foreground/70">
+        <p className="mt-2 text-center font-display text-[11px] font-semibold text-muted-foreground/70">
           下拉换一张 ↓
         </p>
       </div>
@@ -341,6 +460,31 @@ const IntimacyBadge = ({ value, maxed }: { value: number; maxed: boolean }) => (
   </div>
 );
 
+const ActionButton = ({
+  label,
+  icon,
+  onClick,
+  tone,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  tone: "primary" | "secondary" | "accent";
+}) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      "flex flex-col items-center gap-1 rounded-2xl px-4 py-2 shadow-card transition-transform active:scale-95",
+      tone === "primary" && "bg-primary-soft text-primary-foreground",
+      tone === "secondary" && "bg-secondary/60 text-secondary-foreground",
+      tone === "accent" && "bg-accent text-accent-foreground",
+    )}
+  >
+    <span className="flex h-7 w-7 items-center justify-center">{icon}</span>
+    <span className="font-display text-[11px] font-extrabold">{label}</span>
+  </button>
+);
+
 const SuggestionCard = ({
   suggestion,
   onGo,
@@ -359,7 +503,7 @@ const SuggestionCard = ({
       key={suggestion.id}
       onClick={onGo}
       className={cn(
-        "group relative mt-2 w-full overflow-hidden rounded-3xl bg-gradient-card p-4 text-left shadow-card transition-transform active:scale-[0.98] animate-fade-in-up",
+        "group relative mt-3 w-full overflow-hidden rounded-3xl bg-gradient-card p-4 text-left shadow-card transition-transform active:scale-[0.98] animate-fade-in-up",
       )}
     >
       <div className="flex items-center gap-3">
@@ -379,11 +523,7 @@ const SuggestionCard = ({
           </p>
           <p className="mt-0.5 truncate text-xs text-muted-foreground">{suggestion.desc}</p>
         </div>
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-display text-xs font-bold text-primary-foreground shadow-pop bg-gradient-primary",
-          )}
-        >
+        <span className="inline-flex items-center gap-1 rounded-full bg-gradient-primary px-3 py-1.5 font-display text-xs font-bold text-primary-foreground shadow-pop">
           {ctaIcon}
           {suggestion.cta}
           <ChevronRight className="h-3.5 w-3.5" />
