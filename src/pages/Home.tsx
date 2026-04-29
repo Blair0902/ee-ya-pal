@@ -646,11 +646,14 @@ const Home = () => {
           </div>
         </section>
 
-        {/* 动作工具条 */}
-        <div className="mt-1 flex items-center justify-center gap-3">
+        {/* 动作工具条 — 两行，更多夸张动作 */}
+        <div className="mt-1 grid grid-cols-3 gap-2 px-1">
           <ActionButton label="呼叫" icon={<Hand className="h-5 w-5" />} onClick={onCall} tone="primary" />
           <ActionButton label="喂零食" icon={<Bone className="h-5 w-5" />} onClick={onFeed} tone="accent" />
           <ActionButton label="唱歌" icon={<Music2 className="h-5 w-5" />} onClick={onSing} tone="secondary" />
+          <ActionButton label="跑！" icon={<Rocket className="h-5 w-5" />} onClick={onRun} tone="primary" />
+          <ActionButton label="起跳" icon={<Sparkles className="h-5 w-5" />} onClick={onLeap} tone="accent" />
+          <ActionButton label="转圈圈" icon={<RotateCw className="h-5 w-5" />} onClick={onSpin} tone="secondary" />
         </div>
 
         {/* 推荐卡片 */}
