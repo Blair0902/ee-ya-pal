@@ -119,9 +119,19 @@ const Home = () => {
   const PET_DAILY_LIMIT = 5;
 
   const [mood, setMood] = useState<Mood>("idle");
+  const [tapPulseId, setTapPulseId] = useState(0); // 触发宠物整体回弹（key 变更重放动画）
   const [bubble, setBubble] = useState<string | null>(null);
   const [hearts, setHearts] = useState<FloatingThing[]>([]);
   const [floats, setFloats] = useState<FloatingThing[]>([]);
+  // 触点反馈：每次点触在精确位置生成一圈波纹 + 一组飞散粒子
+  type TapFx = {
+    id: number;
+    x: number; // 相对宠物容器 0~1
+    y: number;
+    color: "head" | "back" | "belly" | "tail";
+    particles: { dx: number; dy: number; emoji: string; delay: number }[];
+  };
+  const [taps, setTaps] = useState<TapFx[]>([]);
   const fxIdRef = useRef(0);
   const bubbleTimer = useRef<number | null>(null);
   const moodTimer = useRef<number | null>(null);
@@ -178,9 +188,49 @@ const Home = () => {
 
   const markInteraction = () => (lastInteractionRef.current = Date.now());
 
+  /* -------------------- 统一触点反馈 --------------------
+   * 任何分区被点：450ms 节奏
+   *  - 0ms: 在点击点生成柔光波纹（tap-ripple, 600ms）
+   *  - 0~120ms: 6 颗粒子向外飞散（particle-burst, 900ms 错峰）
+   *  - 0ms: 宠物整体一次轻微回弹（tap-squish, 450ms）
+   */
+  const PARTICLE_SETS: Record<TapFx["color"], string[]> = {
+    head: ["💖", "✨", "💕"],
+    back: ["✨", "🌟", "·"],
+    belly: ["😆", "✨", "🤣"],
+    tail: ["✨", "❓", "💫"],
+  };
+
+  const triggerTap = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>, color: TapFx["color"]) => {
+      const host = e.currentTarget.parentElement; // 宠物容器
+      if (!host) return;
+      const rect = host.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      const id = ++fxIdRef.current;
+      const palette = PARTICLE_SETS[color];
+      const particles = Array.from({ length: 6 }).map((_, i) => {
+        const angle = (Math.PI * 2 * i) / 6 + Math.random() * 0.6 - 0.3;
+        const dist = 38 + Math.random() * 18;
+        return {
+          dx: Math.cos(angle) * dist,
+          dy: Math.sin(angle) * dist - 18, // 整体略向上
+          emoji: palette[i % palette.length],
+          delay: Math.round(Math.random() * 90),
+        };
+      });
+      setTaps((t) => [...t, { id, x, y, color, particles }]);
+      window.setTimeout(() => setTaps((t) => t.filter((p) => p.id !== id)), 1000);
+      setTapPulseId((n) => n + 1); // 触发整体回弹
+    },
+    [],
+  );
+
   // 摸头：数值互动
-  const onPatHead = () => {
+  const onPatHead = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
+    triggerTap(e, "head");
     showBubble(pickLine(LINES.head));
     setMoodFor("happy", 1400);
     if (petTodayCount < PET_DAILY_LIMIT) {
@@ -191,25 +241,27 @@ const Home = () => {
   };
 
   // 摸肚子：纯情感
-  const onPatBelly = () => {
+  const onPatBelly = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
+    triggerTap(e, "belly");
     showBubble(pickLine(LINES.belly));
     setMoodFor("laugh", 1900);
   };
 
   // 摸背
-  const onPatBack = () => {
+  const onPatBack = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
+    triggerTap(e, "back");
     showBubble(pickLine(LINES.back));
     setMoodFor("happy", 1200);
   };
 
   // 揪尾巴
-  const onPokeTail = () => {
+  const onPokeTail = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
+    triggerTap(e, "tail");
     showBubble(pickLine(LINES.tail));
     setMoodFor("curious", 1200);
-    spawnFx("✨", 2);
   };
 
   // 呼叫（按钮）：跳一下
@@ -351,6 +403,7 @@ const Home = () => {
 
           {/* 宠物本体 — 多分区交互；多 mood 图层交叉淡入淡出实现丝滑切换 */}
           <div className="relative z-10 h-[400px] w-[300px]">
+            {/* 外层：mood 动作动画；内层：每次点触叠加一次 tap-squish 回弹 */}
             <div
               key={mood}
               className={cn(
@@ -358,52 +411,109 @@ const Home = () => {
                 moodAnimClass[mood],
               )}
             >
-              {MOODS.map((m) => (
-                <img
-                  key={m}
-                  src={MOOD_TO_IMG[m]}
-                  alt={m === mood ? "小伊呀" : ""}
-                  aria-hidden={m !== mood}
-                  width={1024}
-                  height={1024}
-                  className={cn(
-                    "absolute inset-0 h-full w-full select-none object-contain drop-shadow-[0_30px_30px_hsl(28_60%_40%/0.25)]",
-                    "transition-opacity duration-500 ease-in-out",
-                    m === mood ? "opacity-100" : "opacity-0",
-                  )}
-                  draggable={false}
-                  loading={m === "idle" ? "eager" : "lazy"}
-                />
-              ))}
+              <div
+                key={`pulse-${tapPulseId}`}
+                className={cn(
+                  "relative h-full w-full will-change-transform",
+                  tapPulseId > 0 && "animate-tap-squish",
+                )}
+              >
+                {MOODS.map((m) => (
+                  <img
+                    key={m}
+                    src={MOOD_TO_IMG[m]}
+                    alt={m === mood ? "小伊呀" : ""}
+                    aria-hidden={m !== mood}
+                    width={1024}
+                    height={1024}
+                    className={cn(
+                      "absolute inset-0 h-full w-full select-none object-contain drop-shadow-[0_30px_30px_hsl(28_60%_40%/0.25)]",
+                      "transition-opacity duration-500 ease-in-out",
+                      m === mood ? "opacity-100" : "opacity-0",
+                    )}
+                    draggable={false}
+                    loading={m === "idle" ? "eager" : "lazy"}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* 触点反馈层：精确在点击点生成波纹 + 飞散粒子 */}
+            <div className="pointer-events-none absolute inset-0 z-[25] overflow-visible">
+              {taps.map((t) => {
+                const ringColor =
+                  t.color === "head"
+                    ? "hsl(var(--heart) / 0.55)"
+                    : t.color === "belly"
+                    ? "hsl(var(--coin) / 0.55)"
+                    : t.color === "tail"
+                    ? "hsl(var(--level) / 0.55)"
+                    : "hsl(var(--primary) / 0.55)";
+                return (
+                  <div
+                    key={t.id}
+                    className="absolute"
+                    style={{ left: `${t.x * 100}%`, top: `${t.y * 100}%` }}
+                  >
+                    {/* 波纹 */}
+                    <span
+                      className="absolute h-16 w-16 animate-tap-ripple rounded-full"
+                      style={{
+                        left: 0,
+                        top: 0,
+                        background: `radial-gradient(circle, ${ringColor} 0%, transparent 70%)`,
+                      }}
+                    />
+                    {/* 粒子 */}
+                    {t.particles.map((p, i) => (
+                      <span
+                        key={i}
+                        className="absolute animate-particle-burst select-none text-base font-bold"
+                        style={
+                          {
+                            left: 0,
+                            top: 0,
+                            "--tx": `${p.dx}px`,
+                            "--ty": `${p.dy}px`,
+                            animationDelay: `${p.delay}ms`,
+                          } as React.CSSProperties
+                        }
+                      >
+                        {p.emoji}
+                      </span>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
 
             {/* 头部点击区 */}
             <button
               type="button"
-              onClick={onPatHead}
+              onPointerDown={onPatHead}
               aria-label="摸摸头"
-              className="absolute left-1/2 top-[6%] z-20 h-[28%] w-[55%] -translate-x-1/2 rounded-[50%] active:scale-[0.97]"
+              className="absolute left-1/2 top-[6%] z-20 h-[28%] w-[55%] -translate-x-1/2 rounded-[50%] transition-transform active:scale-[0.96]"
             />
-            {/* 脸/胡子 */}
+            {/* 脸/胡子（顺毛） */}
             <button
               type="button"
-              onClick={onPatBack}
+              onPointerDown={onPatBack}
               aria-label="顺顺毛"
-              className="absolute left-1/2 top-[30%] z-20 h-[18%] w-[60%] -translate-x-1/2 rounded-[40%] active:scale-[0.97]"
+              className="absolute left-1/2 top-[30%] z-20 h-[18%] w-[60%] -translate-x-1/2 rounded-[40%] transition-transform active:scale-[0.96]"
             />
             {/* 肚子（中下） */}
             <button
               type="button"
-              onClick={onPatBelly}
+              onPointerDown={onPatBelly}
               aria-label="挠挠肚子"
-              className="absolute left-1/2 top-[52%] z-20 h-[30%] w-[55%] -translate-x-1/2 rounded-[40%] active:scale-[0.97]"
+              className="absolute left-1/2 top-[52%] z-20 h-[30%] w-[55%] -translate-x-1/2 rounded-[40%] transition-transform active:scale-[0.96]"
             />
             {/* 尾巴（左下角） */}
             <button
               type="button"
-              onClick={onPokeTail}
+              onPointerDown={onPokeTail}
               aria-label="碰碰尾巴"
-              className="absolute bottom-[8%] left-[2%] z-20 h-[22%] w-[26%] rounded-full active:scale-[0.97]"
+              className="absolute bottom-[8%] left-[2%] z-20 h-[22%] w-[26%] rounded-full transition-transform active:scale-[0.94]"
             />
           </div>
 
