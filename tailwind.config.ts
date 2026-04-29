@@ -148,6 +148,29 @@ export default {
           "0%": { transform: "rotate(0deg)" },
           "100%": { transform: "rotate(360deg)" },
         },
+        /* 触点波纹：从中心扩散一圈柔光 */
+        "tap-ripple": {
+          "0%": { opacity: "0.55", transform: "translate(-50%, -50%) scale(0.2)" },
+          "70%": { opacity: "0.25", transform: "translate(-50%, -50%) scale(1.1)" },
+          "100%": { opacity: "0", transform: "translate(-50%, -50%) scale(1.5)" },
+        },
+        /* 粒子飞散：随 CSS var --tx/--ty 方向飘出去 */
+        "particle-burst": {
+          "0%": { opacity: "0", transform: "translate(-50%, -50%) scale(0.4)" },
+          "20%": { opacity: "1", transform: "translate(-50%, -50%) scale(1)" },
+          "100%": {
+            opacity: "0",
+            transform:
+              "translate(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, -40px))) scale(0.6)",
+          },
+        },
+        /* 触摸宠物时极轻的整体回弹（比 pop-bounce 更克制，节奏统一 450ms） */
+        "tap-squish": {
+          "0%": { transform: "scale(1)" },
+          "35%": { transform: "scale(0.96)" },
+          "70%": { transform: "scale(1.03)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -165,6 +188,9 @@ export default {
         "jump-up": "jump-up 0.9s ease-out",
         "shake-x": "shake-x 0.6s ease-in-out",
         "spin-slow": "spin-slow 8s linear infinite",
+        "tap-ripple": "tap-ripple 0.6s ease-out forwards",
+        "particle-burst": "particle-burst 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) forwards",
+        "tap-squish": "tap-squish 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
     },
   },
