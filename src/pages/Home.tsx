@@ -356,7 +356,7 @@ const Home = () => {
 
   const intimacyMaxed = intimacy >= 100;
 
-  // 不同 mood 对应的"动作"动画类（叠加在宠物图层上）
+  // 不同 mood 对应的"内层小动作"动画类（呼吸/抖一下，与"大动作"叠加层独立）
   const moodAnimClass: Record<Mood, string> = {
     idle: "animate-float-slow",
     happy: "animate-pop-bounce",
@@ -365,10 +365,25 @@ const Home = () => {
     curious: "animate-shake-x",
     love: "animate-pop-bounce",
     sleep: "animate-float-slow",
+    wow: "animate-pop-bounce",
+    playful: "animate-wiggle",
+    run: "animate-shake-x",
+    dizzy: "animate-wiggle",
   };
 
-  // 所有 mood 图层都常驻，按 mood 切换 opacity，实现交叉淡入淡出
-  const MOODS: Mood[] = ["idle", "happy", "laugh", "jump", "curious", "love", "sleep"];
+  const MOODS: Mood[] = [
+    "idle",
+    "happy",
+    "laugh",
+    "jump",
+    "curious",
+    "love",
+    "sleep",
+    "wow",
+    "playful",
+    "run",
+    "dizzy",
+  ];
 
   return (
     <PhoneShell>
