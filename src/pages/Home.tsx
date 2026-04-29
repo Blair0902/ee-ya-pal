@@ -11,6 +11,7 @@ import {
   Hand,
   Bone,
   Music2,
+  Rocket,
 } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import petIdle from "@/assets/pet-idle.png";
@@ -20,6 +21,10 @@ import petJump from "@/assets/pet-jump.png";
 import petSleep from "@/assets/pet-sleep.png";
 import petCurious from "@/assets/pet-curious.png";
 import petLove from "@/assets/pet-love.png";
+import petWow from "@/assets/pet-wow.png";
+import petPlayful from "@/assets/pet-playful.png";
+import petRun from "@/assets/pet-run.png";
+import petDizzy from "@/assets/pet-dizzy.png";
 import { cn } from "@/lib/utils";
 
 /* -------------------- 问候语库 -------------------- */
