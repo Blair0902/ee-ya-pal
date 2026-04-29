@@ -472,7 +472,7 @@ const Home = () => {
         </h1>
 
         {/* 宠物舞台 */}
-        <section className="relative mt-2 flex h-[56vh] min-h-[400px] items-end justify-center">
+        <section className="relative mt-2 flex h-[56vh] min-h-[400px] items-end justify-center overflow-visible">
           {/* 远景光晕 */}
           <div className="pointer-events-none absolute left-1/2 top-6 h-72 w-72 -translate-x-1/2 rounded-full bg-primary-soft opacity-60 blur-3xl" />
           {/* 地面光圈 */}
