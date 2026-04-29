@@ -11,6 +11,8 @@ import {
   Hand,
   Bone,
   Music2,
+  Rocket,
+  RotateCw,
 } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import petIdle from "@/assets/pet-idle.png";
@@ -20,6 +22,10 @@ import petJump from "@/assets/pet-jump.png";
 import petSleep from "@/assets/pet-sleep.png";
 import petCurious from "@/assets/pet-curious.png";
 import petLove from "@/assets/pet-love.png";
+import petWow from "@/assets/pet-wow.png";
+import petPlayful from "@/assets/pet-playful.png";
+import petRun from "@/assets/pet-run.png";
+import petDizzy from "@/assets/pet-dizzy.png";
 import { cn } from "@/lib/utils";
 
 /* -------------------- 问候语库 -------------------- */
@@ -37,10 +43,15 @@ const LINES = {
   back: ["嗯～背背好舒服", "再顺一点点～", "毛要被摸顺啦"],
   tail: ["哎呀！尾巴！", "我的尾巴最敏感啦", "嘿，别揪嘛～"],
   call: ["汪汪！我在这儿！", "嘿，你叫我？", "来啦来啦！"],
-  jump: ["看我跳得高不高！", "蹦蹦蹦！", "耶！开心！"],
+  jump: ["看我跳得高不高！", "蹦蹦蹦！", "耶！开心！", "飞起来啦！"],
   curious: ["嗯？那是什么呀？", "咦——", "我想想看…"],
   love: ["最喜欢你啦💕", "你是我的全世界", "心动的感觉～"],
   yawn: ["呼啊～有点困了", "想打个小盹～", "陪我睡一会嘛"],
+  run: ["呼——风好大！", "追我呀追我呀！", "跑起来太爽啦！", "嗖——"],
+  wow: ["哇！好厉害！", "嚯！眼睛发光啦！", "我看到星星啦！"],
+  playful: ["嘻嘻～逗你玩的", "啦啦啦～", "歪头杀！"],
+  dizzy: ["呜哇～转晕啦", "天旋地转…", "扶我起来…"],
+  spin: ["看我转圈圈！", "哇——飞旋！", "晕但是开心！"],
 };
 
 const pickLine = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
@@ -91,7 +102,18 @@ const buildSuggestions = (chattedToday: boolean, hasQuiz: boolean, intimacy: num
 /* -------------------- 飘心动画 -------------------- */
 type FloatingThing = { id: number; x: number; emoji?: string };
 
-type Mood = "idle" | "happy" | "laugh" | "jump" | "sleep" | "curious" | "love";
+type Mood =
+  | "idle"
+  | "happy"
+  | "laugh"
+  | "jump"
+  | "sleep"
+  | "curious"
+  | "love"
+  | "wow"
+  | "playful"
+  | "run"
+  | "dizzy";
 
 const MOOD_TO_IMG: Record<Mood, string> = {
   idle: petIdle,
@@ -101,7 +123,14 @@ const MOOD_TO_IMG: Record<Mood, string> = {
   sleep: petSleep,
   curious: petCurious,
   love: petLove,
+  wow: petWow,
+  playful: petPlayful,
+  run: petRun,
+  dizzy: petDizzy,
 };
+
+/* 大动作叠加层 — 与 mood 解耦，给宠物外层加一段夸张运动 */
+type BigAction = "none" | "run-across" | "hop-triple" | "big-spin" | "boing" | "excite-shake" | "head-tilt";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -119,6 +148,8 @@ const Home = () => {
   const PET_DAILY_LIMIT = 5;
 
   const [mood, setMood] = useState<Mood>("idle");
+  const [bigAction, setBigAction] = useState<BigAction>("none");
+  const bigActionTimer = useRef<number | null>(null);
   const [tapPulseId, setTapPulseId] = useState(0); // 触发宠物整体回弹（key 变更重放动画）
   const [bubble, setBubble] = useState<string | null>(null);
   const [hearts, setHearts] = useState<FloatingThing[]>([]);
@@ -186,6 +217,24 @@ const Home = () => {
     }
   }, []);
 
+  /* 大动作：身体级夸张运动（跑/连跳/翻转/起跳/抖/歪头），与 mood 解耦 */
+  const BIG_DURATION: Record<Exclude<BigAction, "none">, number> = {
+    "run-across": 2600,
+    "hop-triple": 1600,
+    "big-spin": 1100,
+    boing: 1100,
+    "excite-shake": 800,
+    "head-tilt": 1400,
+  };
+  const playBigAction = useCallback((a: Exclude<BigAction, "none">) => {
+    setBigAction(a);
+    if (bigActionTimer.current) window.clearTimeout(bigActionTimer.current);
+    bigActionTimer.current = window.setTimeout(
+      () => setBigAction("none"),
+      BIG_DURATION[a] + 50,
+    );
+  }, []);
+
   const markInteraction = () => (lastInteractionRef.current = Date.now());
 
   /* -------------------- 统一触点反馈 --------------------
@@ -227,12 +276,13 @@ const Home = () => {
     [],
   );
 
-  // 摸头：数值互动
+  // 摸头：数值互动 + 兴奋抖一下
   const onPatHead = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
     triggerTap(e, "head");
     showBubble(pickLine(LINES.head));
     setMoodFor("happy", 1400);
+    playBigAction("excite-shake");
     if (petTodayCount < PET_DAILY_LIMIT) {
       setPetTodayCount((c) => c + 1);
       setIntimacy((v) => Math.min(100, v + 1));
@@ -240,95 +290,138 @@ const Home = () => {
     }
   };
 
-  // 摸肚子：纯情感
+  // 摸肚子：纯情感，笑得歪头
   const onPatBelly = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
     triggerTap(e, "belly");
     showBubble(pickLine(LINES.belly));
     setMoodFor("laugh", 1900);
+    playBigAction("head-tilt");
   };
 
-  // 摸背
+  // 摸背：调皮歪头
   const onPatBack = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
     triggerTap(e, "back");
     showBubble(pickLine(LINES.back));
-    setMoodFor("happy", 1200);
+    setMoodFor("playful", 1500);
   };
 
-  // 揪尾巴
+  // 揪尾巴：吓一跳，蹦一下
   const onPokeTail = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
     triggerTap(e, "tail");
     showBubble(pickLine(LINES.tail));
-    setMoodFor("curious", 1200);
+    setMoodFor("wow", 1400);
+    playBigAction("hop-triple");
   };
 
-  // 呼叫（按钮）：跳一下
+  // 呼叫：连蹦三跳
   const onCall = () => {
     markInteraction();
     showBubble(pickLine(LINES.call));
-    setMoodFor("jump", 1400);
+    setMoodFor("happy", 1700);
+    playBigAction("hop-triple");
     spawnFx("✨", 3);
   };
 
-  // 喂零食：表白
+  // 喂零食：兴奋抖+爱心
   const onFeed = () => {
     markInteraction();
     showBubble(pickLine(LINES.love));
     setMoodFor("love", 1800);
-    spawnFx(undefined, 3);
+    playBigAction("excite-shake");
+    spawnFx(undefined, 4);
     if (petTodayCount < PET_DAILY_LIMIT) {
       setIntimacy((v) => Math.min(100, v + 2));
       setPetTodayCount((c) => c + 1);
     }
   };
 
-  // 唱歌：好奇
+  // 唱歌：歪头杀
   const onSing = () => {
     markInteraction();
     showBubble("听～好好听！");
-    setMoodFor("curious", 1500);
+    setMoodFor("playful", 1600);
+    playBigAction("head-tilt");
     spawnFx("🎵", 3);
   };
 
-  // 自发动作：闲置 6s 后随机做个小动作
+  // 跑！跨场跑过去
+  const onRun = () => {
+    markInteraction();
+    showBubble(pickLine(LINES.run));
+    setMoodFor("run", 2700);
+    playBigAction("run-across");
+    spawnFx("💨", 3);
+  };
+
+  // 转圈圈：360 大转 + 晕
+  const onSpin = () => {
+    markInteraction();
+    showBubble(pickLine(LINES.spin));
+    setMoodFor("playful", 1200);
+    playBigAction("big-spin");
+    // 转完晕一下
+    window.setTimeout(() => {
+      setMoodFor("dizzy", 1500);
+      showBubble(pickLine(LINES.dizzy));
+      spawnFx("💫", 3);
+    }, 1100);
+  };
+
+  // 起跳：boing 蓄力大跳
+  const onLeap = () => {
+    markInteraction();
+    showBubble(pickLine(LINES.jump));
+    setMoodFor("wow", 1400);
+    playBigAction("boing");
+    spawnFx("⭐", 3);
+  };
+
+  // 自发动作：闲置 5s 后随机做个动作；其中包含夸张大动作
   useEffect(() => {
     const tick = window.setInterval(() => {
-      if (mood !== "idle") return;
-      if (Date.now() - lastInteractionRef.current < 6000) return;
+      if (mood !== "idle" || bigAction !== "none") return;
+      if (Date.now() - lastInteractionRef.current < 5000) return;
       const h = new Date().getHours();
       const isLate = h >= 21 || h < 6;
-      const pool: Array<{ m: Mood; line: string; ms: number; fx?: string }> = isLate
+      type Pick = { m: Mood; line: string; ms: number; fx?: string; big?: Exclude<BigAction, "none"> };
+      const pool: Pick[] = isLate
         ? [
             { m: "sleep", line: pickLine(LINES.yawn), ms: 2400 },
-            { m: "curious", line: pickLine(LINES.curious), ms: 1500 },
+            { m: "curious", line: pickLine(LINES.curious), ms: 1500, big: "head-tilt" },
           ]
         : [
-            { m: "curious", line: pickLine(LINES.curious), ms: 1500 },
-            { m: "jump", line: pickLine(LINES.jump), ms: 1400, fx: "✨" },
+            { m: "curious", line: pickLine(LINES.curious), ms: 1500, big: "head-tilt" },
+            { m: "happy", line: pickLine(LINES.jump), ms: 1700, big: "hop-triple", fx: "✨" },
             { m: "love", line: pickLine(LINES.love), ms: 1700 },
-            { m: "happy", line: "嘿嘿～", ms: 1300 },
+            { m: "wow", line: pickLine(LINES.wow), ms: 1400, big: "boing", fx: "⭐" },
+            { m: "playful", line: pickLine(LINES.playful), ms: 1500, big: "head-tilt" },
+            { m: "run", line: pickLine(LINES.run), ms: 2700, big: "run-across", fx: "💨" },
+            { m: "happy", line: "嘿嘿～", ms: 1300, big: "excite-shake" },
           ];
       const pick = pool[Math.floor(Math.random() * pool.length)];
       showBubble(pick.line);
       setMoodFor(pick.m, pick.ms);
+      if (pick.big) playBigAction(pick.big);
       if (pick.fx) spawnFx(pick.fx, 2);
       lastInteractionRef.current = Date.now();
     }, 3500);
     return () => window.clearInterval(tick);
-  }, [mood, showBubble, setMoodFor, spawnFx]);
+  }, [mood, bigAction, showBubble, setMoodFor, spawnFx, playBigAction]);
 
   useEffect(() => {
     return () => {
       if (bubbleTimer.current) window.clearTimeout(bubbleTimer.current);
       if (moodTimer.current) window.clearTimeout(moodTimer.current);
+      if (bigActionTimer.current) window.clearTimeout(bigActionTimer.current);
     };
   }, []);
 
   const intimacyMaxed = intimacy >= 100;
 
-  // 不同 mood 对应的"动作"动画类（叠加在宠物图层上）
+  // 不同 mood 对应的"内层小动作"动画类（呼吸/抖一下，与"大动作"叠加层独立）
   const moodAnimClass: Record<Mood, string> = {
     idle: "animate-float-slow",
     happy: "animate-pop-bounce",
@@ -337,10 +430,25 @@ const Home = () => {
     curious: "animate-shake-x",
     love: "animate-pop-bounce",
     sleep: "animate-float-slow",
+    wow: "animate-pop-bounce",
+    playful: "animate-wiggle",
+    run: "animate-shake-x",
+    dizzy: "animate-wiggle",
   };
 
-  // 所有 mood 图层都常驻，按 mood 切换 opacity，实现交叉淡入淡出
-  const MOODS: Mood[] = ["idle", "happy", "laugh", "jump", "curious", "love", "sleep"];
+  const MOODS: Mood[] = [
+    "idle",
+    "happy",
+    "laugh",
+    "jump",
+    "curious",
+    "love",
+    "sleep",
+    "wow",
+    "playful",
+    "run",
+    "dizzy",
+  ];
 
   return (
     <PhoneShell>
@@ -364,7 +472,7 @@ const Home = () => {
         </h1>
 
         {/* 宠物舞台 */}
-        <section className="relative mt-2 flex h-[56vh] min-h-[400px] items-end justify-center">
+        <section className="relative mt-2 flex h-[56vh] min-h-[400px] items-end justify-center overflow-visible">
           {/* 远景光晕 */}
           <div className="pointer-events-none absolute left-1/2 top-6 h-72 w-72 -translate-x-1/2 rounded-full bg-primary-soft opacity-60 blur-3xl" />
           {/* 地面光圈 */}
@@ -403,38 +511,53 @@ const Home = () => {
 
           {/* 宠物本体 — 多分区交互；多 mood 图层交叉淡入淡出实现丝滑切换 */}
           <div className="relative z-10 h-[400px] w-[300px]">
-            {/* 外层：mood 动作动画；内层：每次点触叠加一次 tap-squish 回弹 */}
+            {/* 最外层：大动作（跨场跑/连跳/翻转/起跳/抖/歪头），以 key 重放 */}
             <div
-              key={mood}
+              key={`big-${bigAction}-${tapPulseId}`}
               className={cn(
                 "relative h-full w-full will-change-transform",
-                moodAnimClass[mood],
+                bigAction === "run-across" && "animate-run-across",
+                bigAction === "hop-triple" && "animate-hop-triple",
+                bigAction === "big-spin" && "animate-big-spin",
+                bigAction === "boing" && "animate-boing",
+                bigAction === "excite-shake" && "animate-excite-shake",
+                bigAction === "head-tilt" && "animate-head-tilt",
               )}
             >
+              {/* 中层：mood 小动作（呼吸/抖一下） */}
               <div
-                key={`pulse-${tapPulseId}`}
+                key={`mood-${mood}`}
                 className={cn(
                   "relative h-full w-full will-change-transform",
-                  tapPulseId > 0 && "animate-tap-squish",
+                  moodAnimClass[mood],
                 )}
               >
-                {MOODS.map((m) => (
-                  <img
-                    key={m}
-                    src={MOOD_TO_IMG[m]}
-                    alt={m === mood ? "小伊呀" : ""}
-                    aria-hidden={m !== mood}
-                    width={1024}
-                    height={1024}
-                    className={cn(
-                      "absolute inset-0 h-full w-full select-none object-contain drop-shadow-[0_30px_30px_hsl(28_60%_40%/0.25)]",
-                      "transition-opacity duration-500 ease-in-out",
-                      m === mood ? "opacity-100" : "opacity-0",
-                    )}
-                    draggable={false}
-                    loading={m === "idle" ? "eager" : "lazy"}
-                  />
-                ))}
+                {/* 内层：每次点触一次 tap-squish */}
+                <div
+                  key={`pulse-${tapPulseId}`}
+                  className={cn(
+                    "relative h-full w-full will-change-transform",
+                    tapPulseId > 0 && "animate-tap-squish",
+                  )}
+                >
+                  {MOODS.map((m) => (
+                    <img
+                      key={m}
+                      src={MOOD_TO_IMG[m]}
+                      alt={m === mood ? "小伊呀" : ""}
+                      aria-hidden={m !== mood}
+                      width={1024}
+                      height={1024}
+                      className={cn(
+                        "absolute inset-0 h-full w-full select-none object-contain drop-shadow-[0_30px_30px_hsl(28_60%_40%/0.25)]",
+                        "transition-opacity duration-300 ease-in-out",
+                        m === mood ? "opacity-100" : "opacity-0",
+                      )}
+                      draggable={false}
+                      loading={m === "idle" ? "eager" : "lazy"}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -524,11 +647,14 @@ const Home = () => {
           </div>
         </section>
 
-        {/* 动作工具条 */}
-        <div className="mt-1 flex items-center justify-center gap-3">
+        {/* 动作工具条 — 两行，更多夸张动作 */}
+        <div className="mt-1 grid grid-cols-3 gap-2 px-1">
           <ActionButton label="呼叫" icon={<Hand className="h-5 w-5" />} onClick={onCall} tone="primary" />
           <ActionButton label="喂零食" icon={<Bone className="h-5 w-5" />} onClick={onFeed} tone="accent" />
           <ActionButton label="唱歌" icon={<Music2 className="h-5 w-5" />} onClick={onSing} tone="secondary" />
+          <ActionButton label="跑！" icon={<Rocket className="h-5 w-5" />} onClick={onRun} tone="primary" />
+          <ActionButton label="起跳" icon={<Sparkles className="h-5 w-5" />} onClick={onLeap} tone="accent" />
+          <ActionButton label="转圈圈" icon={<RotateCw className="h-5 w-5" />} onClick={onSpin} tone="secondary" />
         </div>
 
         {/* 推荐卡片 */}

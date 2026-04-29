@@ -171,6 +171,54 @@ export default {
           "70%": { transform: "scale(1.03)" },
           "100%": { transform: "scale(1)" },
         },
+        /* 跨场跑：从右冲入 → 中央回头 → 从左冲出 */
+        "run-across": {
+          "0%": { transform: "translateX(140%) scaleX(-1)", opacity: "0" },
+          "10%": { opacity: "1" },
+          "42%": { transform: "translateX(0%) scaleX(-1)" },
+          "58%": { transform: "translateX(0%) scaleX(1)" },
+          "90%": { opacity: "1" },
+          "100%": { transform: "translateX(-140%) scaleX(1)", opacity: "0" },
+        },
+        /* 三连跳，节奏鲜明 */
+        "hop-triple": {
+          "0%, 100%": { transform: "translateY(0) scale(1, 1)" },
+          "15%": { transform: "translateY(-50px) scale(1.06, 0.94)" },
+          "30%": { transform: "translateY(0) scale(0.96, 1.04)" },
+          "45%": { transform: "translateY(-44px) scale(1.05, 0.95)" },
+          "60%": { transform: "translateY(0) scale(0.97, 1.03)" },
+          "75%": { transform: "translateY(-30px) scale(1.04, 0.96)" },
+          "90%": { transform: "translateY(0) scale(1, 1)" },
+        },
+        /* 360 大转 */
+        "big-spin": {
+          "0%": { transform: "rotate(0deg) scale(1)" },
+          "50%": { transform: "rotate(180deg) scale(1.08)" },
+          "100%": { transform: "rotate(360deg) scale(1)" },
+        },
+        /* 头歪一歪 */
+        "head-tilt": {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "30%": { transform: "rotate(-12deg)" },
+          "60%": { transform: "rotate(10deg)" },
+        },
+        /* 兴奋抖 */
+        "excite-shake": {
+          "0%, 100%": { transform: "translate(0, 0) rotate(0)" },
+          "20%": { transform: "translate(-6px, -2px) rotate(-3deg)" },
+          "40%": { transform: "translate(6px, -3px) rotate(3deg)" },
+          "60%": { transform: "translate(-5px, 0) rotate(-2deg)" },
+          "80%": { transform: "translate(5px, -1px) rotate(2deg)" },
+        },
+        /* 蓄力起跳：先压扁再爆起 */
+        "boing": {
+          "0%": { transform: "scale(1, 1) translateY(0)" },
+          "20%": { transform: "scale(1.18, 0.78) translateY(8px)" },
+          "45%": { transform: "scale(0.85, 1.20) translateY(-70px)" },
+          "70%": { transform: "scale(1.02, 0.96) translateY(0)" },
+          "85%": { transform: "scale(0.98, 1.02) translateY(-6px)" },
+          "100%": { transform: "scale(1, 1) translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -191,6 +239,12 @@ export default {
         "tap-ripple": "tap-ripple 0.6s ease-out forwards",
         "particle-burst": "particle-burst 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) forwards",
         "tap-squish": "tap-squish 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "run-across": "run-across 2.6s cubic-bezier(0.45, 0, 0.55, 1)",
+        "hop-triple": "hop-triple 1.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "big-spin": "big-spin 1.1s cubic-bezier(0.5, 0, 0.5, 1)",
+        "head-tilt": "head-tilt 1.4s ease-in-out",
+        "excite-shake": "excite-shake 0.8s ease-in-out",
+        "boing": "boing 1.1s cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
     },
   },
