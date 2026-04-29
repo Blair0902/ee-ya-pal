@@ -119,10 +119,19 @@ const Home = () => {
   const PET_DAILY_LIMIT = 5;
 
   const [mood, setMood] = useState<Mood>("idle");
-  const [tapPulseId, setTapPulseId] = useState(0); // 触发宠物整体回弹
+  const [tapPulseId, setTapPulseId] = useState(0); // 触发宠物整体回弹（key 变更重放动画）
   const [bubble, setBubble] = useState<string | null>(null);
   const [hearts, setHearts] = useState<FloatingThing[]>([]);
   const [floats, setFloats] = useState<FloatingThing[]>([]);
+  // 触点反馈：每次点触在精确位置生成一圈波纹 + 一组飞散粒子
+  type TapFx = {
+    id: number;
+    x: number; // 相对宠物容器 0~1
+    y: number;
+    color: "head" | "back" | "belly" | "tail";
+    particles: { dx: number; dy: number; emoji: string; delay: number }[];
+  };
+  const [taps, setTaps] = useState<TapFx[]>([]);
   const fxIdRef = useRef(0);
   const bubbleTimer = useRef<number | null>(null);
   const moodTimer = useRef<number | null>(null);
