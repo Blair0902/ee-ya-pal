@@ -349,8 +349,6 @@ const Home = () => {
             </div>
           ))}
 
-          {/* 宠物本体 — 多分区交互 */}
-          <div className="relative z-10 h-[400px] w-[300px]">
           {/* 宠物本体 — 多分区交互；多 mood 图层交叉淡入淡出实现丝滑切换 */}
           <div className="relative z-10 h-[400px] w-[300px]">
             <div
