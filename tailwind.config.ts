@@ -131,6 +131,23 @@ export default {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        "jump-up": {
+          "0%": { transform: "translateY(0) scale(1)" },
+          "30%": { transform: "translateY(-40px) scale(1.05)" },
+          "60%": { transform: "translateY(-10px) scale(0.98)" },
+          "100%": { transform: "translateY(0) scale(1)" },
+        },
+        "shake-x": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "20%": { transform: "translateX(-8px)" },
+          "40%": { transform: "translateX(8px)" },
+          "60%": { transform: "translateX(-6px)" },
+          "80%": { transform: "translateX(6px)" },
+        },
+        "spin-slow": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
