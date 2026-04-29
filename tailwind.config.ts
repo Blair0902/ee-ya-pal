@@ -153,6 +153,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         float: "float 4s ease-in-out infinite",
+        "float-slow": "float 6s ease-in-out infinite",
         "blink-eye": "blink-eye 5s ease-in-out infinite",
         "fade-in-up": "fade-in-up 0.4s ease-out",
         "scale-in": "scale-in 0.3s ease-out",
