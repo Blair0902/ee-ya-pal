@@ -274,19 +274,21 @@ const Home = () => {
     };
   }, []);
 
-  const petSrc = MOOD_TO_IMG[mood];
   const intimacyMaxed = intimacy >= 100;
 
-  // 动画类
-  const petAnimClass = cn(
-    mood === "idle" && "animate-float",
-    mood === "happy" && "animate-pop-bounce",
-    mood === "laugh" && "animate-wiggle",
-    mood === "jump" && "animate-jump-up",
-    mood === "curious" && "animate-shake-x",
-    mood === "love" && "animate-pop-bounce",
-    mood === "sleep" && "animate-float",
-  );
+  // 不同 mood 对应的"动作"动画类（叠加在宠物图层上）
+  const moodAnimClass: Record<Mood, string> = {
+    idle: "animate-float-slow",
+    happy: "animate-pop-bounce",
+    laugh: "animate-wiggle",
+    jump: "animate-jump-up",
+    curious: "animate-shake-x",
+    love: "animate-pop-bounce",
+    sleep: "animate-float-slow",
+  };
+
+  // 所有 mood 图层都常驻，按 mood 切换 opacity，实现交叉淡入淡出
+  const MOODS: Mood[] = ["idle", "happy", "laugh", "jump", "curious", "love", "sleep"];
 
   return (
     <PhoneShell>
