@@ -147,6 +147,8 @@ const Home = () => {
   const PET_DAILY_LIMIT = 5;
 
   const [mood, setMood] = useState<Mood>("idle");
+  const [bigAction, setBigAction] = useState<BigAction>("none");
+  const bigActionTimer = useRef<number | null>(null);
   const [tapPulseId, setTapPulseId] = useState(0); // 触发宠物整体回弹（key 变更重放动画）
   const [bubble, setBubble] = useState<string | null>(null);
   const [hearts, setHearts] = useState<FloatingThing[]>([]);
