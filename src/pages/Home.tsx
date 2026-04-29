@@ -274,19 +274,21 @@ const Home = () => {
     };
   }, []);
 
-  const petSrc = MOOD_TO_IMG[mood];
   const intimacyMaxed = intimacy >= 100;
 
-  // 动画类
-  const petAnimClass = cn(
-    mood === "idle" && "animate-float",
-    mood === "happy" && "animate-pop-bounce",
-    mood === "laugh" && "animate-wiggle",
-    mood === "jump" && "animate-jump-up",
-    mood === "curious" && "animate-shake-x",
-    mood === "love" && "animate-pop-bounce",
-    mood === "sleep" && "animate-float",
-  );
+  // 不同 mood 对应的"动作"动画类（叠加在宠物图层上）
+  const moodAnimClass: Record<Mood, string> = {
+    idle: "animate-float-slow",
+    happy: "animate-pop-bounce",
+    laugh: "animate-wiggle",
+    jump: "animate-jump-up",
+    curious: "animate-shake-x",
+    love: "animate-pop-bounce",
+    sleep: "animate-float-slow",
+  };
+
+  // 所有 mood 图层都常驻，按 mood 切换 opacity，实现交叉淡入淡出
+  const MOODS: Mood[] = ["idle", "happy", "laugh", "jump", "curious", "love", "sleep"];
 
   return (
     <PhoneShell>
@@ -347,17 +349,32 @@ const Home = () => {
             </div>
           ))}
 
-          {/* 宠物本体 — 多分区交互 */}
+          {/* 宠物本体 — 多分区交互；多 mood 图层交叉淡入淡出实现丝滑切换 */}
           <div className="relative z-10 h-[400px] w-[300px]">
-            <div className={cn("h-full w-full transition-transform", petAnimClass)}>
-              <img
-                src={petSrc}
-                alt="小伊呀"
-                width={1024}
-                height={1024}
-                className="h-full w-full select-none object-contain drop-shadow-[0_30px_30px_hsl(28_60%_40%/0.25)] transition-all duration-300"
-                draggable={false}
-              />
+            <div
+              key={mood}
+              className={cn(
+                "relative h-full w-full will-change-transform",
+                moodAnimClass[mood],
+              )}
+            >
+              {MOODS.map((m) => (
+                <img
+                  key={m}
+                  src={MOOD_TO_IMG[m]}
+                  alt={m === mood ? "小伊呀" : ""}
+                  aria-hidden={m !== mood}
+                  width={1024}
+                  height={1024}
+                  className={cn(
+                    "absolute inset-0 h-full w-full select-none object-contain drop-shadow-[0_30px_30px_hsl(28_60%_40%/0.25)]",
+                    "transition-opacity duration-500 ease-in-out",
+                    m === mood ? "opacity-100" : "opacity-0",
+                  )}
+                  draggable={false}
+                  loading={m === "idle" ? "eager" : "lazy"}
+                />
+              ))}
             </div>
 
             {/* 头部点击区 */}
