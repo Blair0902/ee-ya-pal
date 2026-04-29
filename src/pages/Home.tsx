@@ -312,60 +312,100 @@ const Home = () => {
     setMoodFor("curious", 1200);
   };
 
-  // 呼叫（按钮）：跳一下
+  // 呼叫：连蹦三跳
   const onCall = () => {
     markInteraction();
     showBubble(pickLine(LINES.call));
-    setMoodFor("jump", 1400);
+    setMoodFor("happy", 1700);
+    playBigAction("hop-triple");
     spawnFx("✨", 3);
   };
 
-  // 喂零食：表白
+  // 喂零食：兴奋抖+爱心
   const onFeed = () => {
     markInteraction();
     showBubble(pickLine(LINES.love));
     setMoodFor("love", 1800);
-    spawnFx(undefined, 3);
+    playBigAction("excite-shake");
+    spawnFx(undefined, 4);
     if (petTodayCount < PET_DAILY_LIMIT) {
       setIntimacy((v) => Math.min(100, v + 2));
       setPetTodayCount((c) => c + 1);
     }
   };
 
-  // 唱歌：好奇
+  // 唱歌：歪头杀
   const onSing = () => {
     markInteraction();
     showBubble("听～好好听！");
-    setMoodFor("curious", 1500);
+    setMoodFor("playful", 1600);
+    playBigAction("head-tilt");
     spawnFx("🎵", 3);
   };
 
-  // 自发动作：闲置 6s 后随机做个小动作
+  // 跑！跨场跑过去
+  const onRun = () => {
+    markInteraction();
+    showBubble(pickLine(LINES.run));
+    setMoodFor("run", 2700);
+    playBigAction("run-across");
+    spawnFx("💨", 3);
+  };
+
+  // 转圈圈：360 大转 + 晕
+  const onSpin = () => {
+    markInteraction();
+    showBubble(pickLine(LINES.spin));
+    setMoodFor("playful", 1200);
+    playBigAction("big-spin");
+    // 转完晕一下
+    window.setTimeout(() => {
+      setMoodFor("dizzy", 1500);
+      showBubble(pickLine(LINES.dizzy));
+      spawnFx("💫", 3);
+    }, 1100);
+  };
+
+  // 起跳：boing 蓄力大跳
+  const onLeap = () => {
+    markInteraction();
+    showBubble(pickLine(LINES.jump));
+    setMoodFor("wow", 1400);
+    playBigAction("boing");
+    spawnFx("⭐", 3);
+  };
+
+  // 自发动作：闲置 5s 后随机做个动作；其中包含夸张大动作
   useEffect(() => {
     const tick = window.setInterval(() => {
-      if (mood !== "idle") return;
-      if (Date.now() - lastInteractionRef.current < 6000) return;
+      if (mood !== "idle" || bigAction !== "none") return;
+      if (Date.now() - lastInteractionRef.current < 5000) return;
       const h = new Date().getHours();
       const isLate = h >= 21 || h < 6;
-      const pool: Array<{ m: Mood; line: string; ms: number; fx?: string }> = isLate
+      type Pick = { m: Mood; line: string; ms: number; fx?: string; big?: Exclude<BigAction, "none"> };
+      const pool: Pick[] = isLate
         ? [
             { m: "sleep", line: pickLine(LINES.yawn), ms: 2400 },
-            { m: "curious", line: pickLine(LINES.curious), ms: 1500 },
+            { m: "curious", line: pickLine(LINES.curious), ms: 1500, big: "head-tilt" },
           ]
         : [
-            { m: "curious", line: pickLine(LINES.curious), ms: 1500 },
-            { m: "jump", line: pickLine(LINES.jump), ms: 1400, fx: "✨" },
+            { m: "curious", line: pickLine(LINES.curious), ms: 1500, big: "head-tilt" },
+            { m: "happy", line: pickLine(LINES.jump), ms: 1700, big: "hop-triple", fx: "✨" },
             { m: "love", line: pickLine(LINES.love), ms: 1700 },
-            { m: "happy", line: "嘿嘿～", ms: 1300 },
+            { m: "wow", line: pickLine(LINES.wow), ms: 1400, big: "boing", fx: "⭐" },
+            { m: "playful", line: pickLine(LINES.playful), ms: 1500, big: "head-tilt" },
+            { m: "run", line: pickLine(LINES.run), ms: 2700, big: "run-across", fx: "💨" },
+            { m: "happy", line: "嘿嘿～", ms: 1300, big: "excite-shake" },
           ];
       const pick = pool[Math.floor(Math.random() * pool.length)];
       showBubble(pick.line);
       setMoodFor(pick.m, pick.ms);
+      if (pick.big) playBigAction(pick.big);
       if (pick.fx) spawnFx(pick.fx, 2);
       lastInteractionRef.current = Date.now();
     }, 3500);
     return () => window.clearInterval(tick);
-  }, [mood, showBubble, setMoodFor, spawnFx]);
+  }, [mood, bigAction, showBubble, setMoodFor, spawnFx, playBigAction]);
 
   useEffect(() => {
     return () => {
