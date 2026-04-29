@@ -12,6 +12,7 @@ import {
   Bone,
   Music2,
   Rocket,
+  RotateCw,
 } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import petIdle from "@/assets/pet-idle.png";
