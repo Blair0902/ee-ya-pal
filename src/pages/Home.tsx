@@ -216,6 +216,24 @@ const Home = () => {
     }
   }, []);
 
+  /* 大动作：身体级夸张运动（跑/连跳/翻转/起跳/抖/歪头），与 mood 解耦 */
+  const BIG_DURATION: Record<Exclude<BigAction, "none">, number> = {
+    "run-across": 2600,
+    "hop-triple": 1600,
+    "big-spin": 1100,
+    boing: 1100,
+    "excite-shake": 800,
+    "head-tilt": 1400,
+  };
+  const playBigAction = useCallback((a: Exclude<BigAction, "none">) => {
+    setBigAction(a);
+    if (bigActionTimer.current) window.clearTimeout(bigActionTimer.current);
+    bigActionTimer.current = window.setTimeout(
+      () => setBigAction("none"),
+      BIG_DURATION[a] + 50,
+    );
+  }, []);
+
   const markInteraction = () => (lastInteractionRef.current = Date.now());
 
   /* -------------------- 统一触点反馈 --------------------
