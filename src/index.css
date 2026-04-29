@@ -1,96 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* 伊呀 — 奶油马卡龙设计系统
+ * 所有颜色 HSL，所有装饰统一从这里出
+ */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* 背景 / 前景 — 奶油底 */
+    --background: 36 60% 97%;
+    --foreground: 28 30% 22%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* 卡片：更白一些，带一点暖 */
+    --card: 40 70% 99%;
+    --card-foreground: 28 30% 22%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 40 70% 99%;
+    --popover-foreground: 28 30% 22%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* 主色 — 蜜桃橘 */
+    --primary: 22 92% 68%;
+    --primary-foreground: 30 50% 16%;
+    --primary-soft: 22 100% 92%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* 次色 — 薄荷绿 */
+    --secondary: 152 55% 78%;
+    --secondary-foreground: 160 40% 22%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* 静音 / 辅助文本 */
+    --muted: 36 40% 92%;
+    --muted-foreground: 28 18% 48%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* 强调 — 樱花粉 */
+    --accent: 340 90% 88%;
+    --accent-foreground: 340 50% 30%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* 爱心 / 亲密度 */
+    --heart: 348 88% 70%;
+    --heart-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* 金币 */
+    --coin: 42 95% 60%;
+    --coin-foreground: 30 60% 18%;
 
-    --radius: 0.5rem;
+    /* 等级 — 薰衣草 */
+    --level: 258 75% 78%;
+    --level-foreground: 258 50% 28%;
 
-    --sidebar-background: 0 0% 98%;
+    --destructive: 0 75% 65%;
+    --destructive-foreground: 0 0% 100%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --border: 32 40% 88%;
+    --input: 32 40% 88%;
+    --ring: 22 92% 68%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --radius: 1.5rem;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    /* 渐变 */
+    --gradient-sky: linear-gradient(180deg, hsl(36 80% 96%) 0%, hsl(28 70% 92%) 60%, hsl(22 65% 88%) 100%);
+    --gradient-sun: radial-gradient(circle at 50% 30%, hsl(48 100% 92%) 0%, hsl(36 80% 96%) 60%, transparent 100%);
+    --gradient-card: linear-gradient(160deg, hsl(40 70% 99%) 0%, hsl(36 60% 97%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(22 95% 72%) 0%, hsl(14 88% 66%) 100%);
+    --gradient-heart: linear-gradient(90deg, hsl(348 88% 72%) 0%, hsl(330 85% 70%) 100%);
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    /* 阴影 — 都很柔，带颜色 */
+    --shadow-soft: 0 8px 24px -8px hsl(28 50% 50% / 0.18);
+    --shadow-pet: 0 30px 60px -20px hsl(28 60% 40% / 0.28);
+    --shadow-card: 0 6px 20px -8px hsl(28 40% 50% / 0.15), 0 2px 6px -2px hsl(28 40% 50% / 0.08);
+    --shadow-tab: 0 -8px 24px -10px hsl(28 50% 40% / 0.18);
+    --shadow-pop: 0 12px 32px -8px hsl(22 92% 60% / 0.45);
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* 字体 */
+    --font-display: 'Baloo 2', system-ui, sans-serif;
+    --font-body: 'Nunito', system-ui, sans-serif;
   }
 }
 
@@ -98,8 +83,39 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
+  html, body, #root {
+    @apply h-full;
+  }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
   }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  .bg-gradient-sky { background: var(--gradient-sky); }
+  .bg-gradient-sun { background: var(--gradient-sun); }
+  .bg-gradient-card { background: var(--gradient-card); }
+  .bg-gradient-primary { background: var(--gradient-primary); }
+  .bg-gradient-heart { background: var(--gradient-heart); }
+
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-pet { box-shadow: var(--shadow-pet); }
+  .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-tab { box-shadow: var(--shadow-tab); }
+  .shadow-pop { box-shadow: var(--shadow-pop); }
+
+  .font-display { font-family: var(--font-display); }
+  .font-body { font-family: var(--font-body); }
+
+  /* 安全区适配 */
+  .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+  .pt-safe { padding-top: max(env(safe-area-inset-top), 0px); }
 }
