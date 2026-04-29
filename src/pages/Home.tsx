@@ -188,9 +188,49 @@ const Home = () => {
 
   const markInteraction = () => (lastInteractionRef.current = Date.now());
 
+  /* -------------------- 统一触点反馈 --------------------
+   * 任何分区被点：450ms 节奏
+   *  - 0ms: 在点击点生成柔光波纹（tap-ripple, 600ms）
+   *  - 0~120ms: 6 颗粒子向外飞散（particle-burst, 900ms 错峰）
+   *  - 0ms: 宠物整体一次轻微回弹（tap-squish, 450ms）
+   */
+  const PARTICLE_SETS: Record<TapFx["color"], string[]> = {
+    head: ["💖", "✨", "💕"],
+    back: ["✨", "🌟", "·"],
+    belly: ["😆", "✨", "🤣"],
+    tail: ["✨", "❓", "💫"],
+  };
+
+  const triggerTap = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>, color: TapFx["color"]) => {
+      const host = e.currentTarget.parentElement; // 宠物容器
+      if (!host) return;
+      const rect = host.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      const id = ++fxIdRef.current;
+      const palette = PARTICLE_SETS[color];
+      const particles = Array.from({ length: 6 }).map((_, i) => {
+        const angle = (Math.PI * 2 * i) / 6 + Math.random() * 0.6 - 0.3;
+        const dist = 38 + Math.random() * 18;
+        return {
+          dx: Math.cos(angle) * dist,
+          dy: Math.sin(angle) * dist - 18, // 整体略向上
+          emoji: palette[i % palette.length],
+          delay: Math.round(Math.random() * 90),
+        };
+      });
+      setTaps((t) => [...t, { id, x, y, color, particles }]);
+      window.setTimeout(() => setTaps((t) => t.filter((p) => p.id !== id)), 1000);
+      setTapPulseId((n) => n + 1); // 触发整体回弹
+    },
+    [],
+  );
+
   // 摸头：数值互动
-  const onPatHead = () => {
+  const onPatHead = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
+    triggerTap(e, "head");
     showBubble(pickLine(LINES.head));
     setMoodFor("happy", 1400);
     if (petTodayCount < PET_DAILY_LIMIT) {
@@ -201,25 +241,27 @@ const Home = () => {
   };
 
   // 摸肚子：纯情感
-  const onPatBelly = () => {
+  const onPatBelly = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
+    triggerTap(e, "belly");
     showBubble(pickLine(LINES.belly));
     setMoodFor("laugh", 1900);
   };
 
   // 摸背
-  const onPatBack = () => {
+  const onPatBack = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
+    triggerTap(e, "back");
     showBubble(pickLine(LINES.back));
     setMoodFor("happy", 1200);
   };
 
   // 揪尾巴
-  const onPokeTail = () => {
+  const onPokeTail = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
+    triggerTap(e, "tail");
     showBubble(pickLine(LINES.tail));
     setMoodFor("curious", 1200);
-    spawnFx("✨", 2);
   };
 
   // 呼叫（按钮）：跳一下
