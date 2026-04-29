@@ -275,12 +275,13 @@ const Home = () => {
     [],
   );
 
-  // 摸头：数值互动
+  // 摸头：数值互动 + 兴奋抖一下
   const onPatHead = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
     triggerTap(e, "head");
     showBubble(pickLine(LINES.head));
     setMoodFor("happy", 1400);
+    playBigAction("excite-shake");
     if (petTodayCount < PET_DAILY_LIMIT) {
       setPetTodayCount((c) => c + 1);
       setIntimacy((v) => Math.min(100, v + 1));
@@ -288,28 +289,30 @@ const Home = () => {
     }
   };
 
-  // 摸肚子：纯情感
+  // 摸肚子：纯情感，笑得歪头
   const onPatBelly = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
     triggerTap(e, "belly");
     showBubble(pickLine(LINES.belly));
     setMoodFor("laugh", 1900);
+    playBigAction("head-tilt");
   };
 
-  // 摸背
+  // 摸背：调皮歪头
   const onPatBack = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
     triggerTap(e, "back");
     showBubble(pickLine(LINES.back));
-    setMoodFor("happy", 1200);
+    setMoodFor("playful", 1500);
   };
 
-  // 揪尾巴
+  // 揪尾巴：吓一跳，蹦一下
   const onPokeTail = (e: React.PointerEvent<HTMLButtonElement>) => {
     markInteraction();
     triggerTap(e, "tail");
     showBubble(pickLine(LINES.tail));
-    setMoodFor("curious", 1200);
+    setMoodFor("wow", 1400);
+    playBigAction("hop-triple");
   };
 
   // 呼叫：连蹦三跳
