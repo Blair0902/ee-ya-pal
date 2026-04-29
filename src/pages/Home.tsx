@@ -506,38 +506,53 @@ const Home = () => {
 
           {/* 宠物本体 — 多分区交互；多 mood 图层交叉淡入淡出实现丝滑切换 */}
           <div className="relative z-10 h-[400px] w-[300px]">
-            {/* 外层：mood 动作动画；内层：每次点触叠加一次 tap-squish 回弹 */}
+            {/* 最外层：大动作（跨场跑/连跳/翻转/起跳/抖/歪头），以 key 重放 */}
             <div
-              key={mood}
+              key={`big-${bigAction}-${tapPulseId}`}
               className={cn(
                 "relative h-full w-full will-change-transform",
-                moodAnimClass[mood],
+                bigAction === "run-across" && "animate-run-across",
+                bigAction === "hop-triple" && "animate-hop-triple",
+                bigAction === "big-spin" && "animate-big-spin",
+                bigAction === "boing" && "animate-boing",
+                bigAction === "excite-shake" && "animate-excite-shake",
+                bigAction === "head-tilt" && "animate-head-tilt",
               )}
             >
+              {/* 中层：mood 小动作（呼吸/抖一下） */}
               <div
-                key={`pulse-${tapPulseId}`}
+                key={`mood-${mood}`}
                 className={cn(
                   "relative h-full w-full will-change-transform",
-                  tapPulseId > 0 && "animate-tap-squish",
+                  moodAnimClass[mood],
                 )}
               >
-                {MOODS.map((m) => (
-                  <img
-                    key={m}
-                    src={MOOD_TO_IMG[m]}
-                    alt={m === mood ? "小伊呀" : ""}
-                    aria-hidden={m !== mood}
-                    width={1024}
-                    height={1024}
-                    className={cn(
-                      "absolute inset-0 h-full w-full select-none object-contain drop-shadow-[0_30px_30px_hsl(28_60%_40%/0.25)]",
-                      "transition-opacity duration-500 ease-in-out",
-                      m === mood ? "opacity-100" : "opacity-0",
-                    )}
-                    draggable={false}
-                    loading={m === "idle" ? "eager" : "lazy"}
-                  />
-                ))}
+                {/* 内层：每次点触一次 tap-squish */}
+                <div
+                  key={`pulse-${tapPulseId}`}
+                  className={cn(
+                    "relative h-full w-full will-change-transform",
+                    tapPulseId > 0 && "animate-tap-squish",
+                  )}
+                >
+                  {MOODS.map((m) => (
+                    <img
+                      key={m}
+                      src={MOOD_TO_IMG[m]}
+                      alt={m === mood ? "小伊呀" : ""}
+                      aria-hidden={m !== mood}
+                      width={1024}
+                      height={1024}
+                      className={cn(
+                        "absolute inset-0 h-full w-full select-none object-contain drop-shadow-[0_30px_30px_hsl(28_60%_40%/0.25)]",
+                        "transition-opacity duration-300 ease-in-out",
+                        m === mood ? "opacity-100" : "opacity-0",
+                      )}
+                      draggable={false}
+                      loading={m === "idle" ? "eager" : "lazy"}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
 
