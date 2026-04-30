@@ -112,6 +112,10 @@ const Home = () => {
   const PET_DAILY_LIMIT = 5;
 
   const [mood, setMood] = useState<Mood>("idle");
+  // 当前宠物（持久化到 localStorage）
+  const [petId, setPetId] = useState<PetId>(() => loadPetId());
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const currentPet = useMemo(() => getPet(petId), [petId]);
   const [bigAction, setBigAction] = useState<BigAction>("none");
   const bigActionTimer = useRef<number | null>(null);
   const [tapPulseId, setTapPulseId] = useState(0); // 触发宠物整体回弹（key 变更重放动画）
