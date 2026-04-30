@@ -404,19 +404,14 @@ const Home = () => {
     dizzy: "animate-wiggle",
   };
 
-  const MOODS: Mood[] = [
-    "idle",
-    "happy",
-    "laugh",
-    "jump",
-    "curious",
-    "love",
-    "sleep",
-    "wow",
-    "playful",
-    "run",
-    "dizzy",
-  ];
+  const handlePickPet = (id: PetId) => {
+    setPetId(id);
+    savePetId(id);
+    setSwitcherOpen(false);
+    showBubble(`你好呀，我是${getPet(id).name}！`);
+    setMoodFor("happy", 1600);
+    playBigAction("excite-shake");
+  };
 
   return (
     <PhoneShell>
