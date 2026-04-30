@@ -15,17 +15,8 @@ import {
   RotateCw,
 } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
-import petIdle from "@/assets/pet-idle.png";
-import petHappy from "@/assets/pet-happy.png";
-import petLaugh from "@/assets/pet-laugh.png";
-import petJump from "@/assets/pet-jump.png";
-import petSleep from "@/assets/pet-sleep.png";
-import petCurious from "@/assets/pet-curious.png";
-import petLove from "@/assets/pet-love.png";
-import petWow from "@/assets/pet-wow.png";
-import petPlayful from "@/assets/pet-playful.png";
-import petRun from "@/assets/pet-run.png";
-import petDizzy from "@/assets/pet-dizzy.png";
+import { PetSwitcher, PetSwitcherTrigger } from "@/components/PetSwitcher";
+import { MOODS, Mood, PetId, getPet, loadPetId, moodImage, savePetId } from "@/lib/pets";
 import { cn } from "@/lib/utils";
 
 /* -------------------- 问候语库 -------------------- */
@@ -102,33 +93,6 @@ const buildSuggestions = (chattedToday: boolean, hasQuiz: boolean, intimacy: num
 /* -------------------- 飘心动画 -------------------- */
 type FloatingThing = { id: number; x: number; emoji?: string };
 
-type Mood =
-  | "idle"
-  | "happy"
-  | "laugh"
-  | "jump"
-  | "sleep"
-  | "curious"
-  | "love"
-  | "wow"
-  | "playful"
-  | "run"
-  | "dizzy";
-
-const MOOD_TO_IMG: Record<Mood, string> = {
-  idle: petIdle,
-  happy: petHappy,
-  laugh: petLaugh,
-  jump: petJump,
-  sleep: petSleep,
-  curious: petCurious,
-  love: petLove,
-  wow: petWow,
-  playful: petPlayful,
-  run: petRun,
-  dizzy: petDizzy,
-};
-
 /* 大动作叠加层 — 与 mood 解耦，给宠物外层加一段夸张运动 */
 type BigAction = "none" | "run-across" | "hop-triple" | "big-spin" | "boing" | "excite-shake" | "head-tilt";
 
@@ -148,6 +112,10 @@ const Home = () => {
   const PET_DAILY_LIMIT = 5;
 
   const [mood, setMood] = useState<Mood>("idle");
+  // 当前宠物（持久化到 localStorage）
+  const [petId, setPetId] = useState<PetId>(() => loadPetId());
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const currentPet = useMemo(() => getPet(petId), [petId]);
   const [bigAction, setBigAction] = useState<BigAction>("none");
   const bigActionTimer = useRef<number | null>(null);
   const [tapPulseId, setTapPulseId] = useState(0); // 触发宠物整体回弹（key 变更重放动画）
@@ -436,19 +404,14 @@ const Home = () => {
     dizzy: "animate-wiggle",
   };
 
-  const MOODS: Mood[] = [
-    "idle",
-    "happy",
-    "laugh",
-    "jump",
-    "curious",
-    "love",
-    "sleep",
-    "wow",
-    "playful",
-    "run",
-    "dizzy",
-  ];
+  const handlePickPet = (id: PetId) => {
+    setPetId(id);
+    savePetId(id);
+    setSwitcherOpen(false);
+    showBubble(`你好呀，我是${getPet(id).name}！`);
+    setMoodFor("happy", 1600);
+    playBigAction("excite-shake");
+  };
 
   return (
     <PhoneShell>
@@ -458,8 +421,11 @@ const Home = () => {
         onTouchEnd={onTouchEnd}
       >
         {/* 顶栏：徽章 */}
-        <header className="flex items-center justify-between pt-4">
-          <Badge tone="level" icon={<Sparkles className="h-3.5 w-3.5" />} text={`Lv.${level}`} />
+        <header className="flex items-center justify-between gap-2 pt-4">
+          <div className="flex items-center gap-2">
+            <Badge tone="level" icon={<Sparkles className="h-3.5 w-3.5" />} text={`Lv.${level}`} />
+            <PetSwitcherTrigger currentId={petId} onClick={() => setSwitcherOpen(true)} />
+          </div>
           <div className="flex items-center gap-2">
             <IntimacyBadge value={intimacy} maxed={intimacyMaxed} />
             <Badge tone="coin" icon={<Coins className="h-3.5 w-3.5" />} text={String(coins)} />
@@ -543,8 +509,8 @@ const Home = () => {
                   {MOODS.map((m) => (
                     <img
                       key={m}
-                      src={MOOD_TO_IMG[m]}
-                      alt={m === mood ? "小伊呀" : ""}
+                      src={moodImage(currentPet, m)}
+                      alt={m === mood ? currentPet.name : ""}
                       aria-hidden={m !== mood}
                       width={1024}
                       height={1024}
@@ -665,6 +631,13 @@ const Home = () => {
           下拉换一张 ↓
         </p>
       </div>
+
+      <PetSwitcher
+        open={switcherOpen}
+        currentId={petId}
+        onPick={handlePickPet}
+        onClose={() => setSwitcherOpen(false)}
+      />
     </PhoneShell>
   );
 };
