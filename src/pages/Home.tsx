@@ -93,33 +93,6 @@ const buildSuggestions = (chattedToday: boolean, hasQuiz: boolean, intimacy: num
 /* -------------------- 飘心动画 -------------------- */
 type FloatingThing = { id: number; x: number; emoji?: string };
 
-type Mood =
-  | "idle"
-  | "happy"
-  | "laugh"
-  | "jump"
-  | "sleep"
-  | "curious"
-  | "love"
-  | "wow"
-  | "playful"
-  | "run"
-  | "dizzy";
-
-const MOOD_TO_IMG: Record<Mood, string> = {
-  idle: petIdle,
-  happy: petHappy,
-  laugh: petLaugh,
-  jump: petJump,
-  sleep: petSleep,
-  curious: petCurious,
-  love: petLove,
-  wow: petWow,
-  playful: petPlayful,
-  run: petRun,
-  dizzy: petDizzy,
-};
-
 /* 大动作叠加层 — 与 mood 解耦，给宠物外层加一段夸张运动 */
 type BigAction = "none" | "run-across" | "hop-triple" | "big-spin" | "boing" | "excite-shake" | "head-tilt";
 
