@@ -506,8 +506,8 @@ const Home = () => {
                   {MOODS.map((m) => (
                     <img
                       key={m}
-                      src={MOOD_TO_IMG[m]}
-                      alt={m === mood ? "小伊呀" : ""}
+                      src={moodImage(currentPet, m)}
+                      alt={m === mood ? currentPet.name : ""}
                       aria-hidden={m !== mood}
                       width={1024}
                       height={1024}
