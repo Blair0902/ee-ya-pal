@@ -15,17 +15,8 @@ import {
   RotateCw,
 } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
-import petIdle from "@/assets/pet-idle.png";
-import petHappy from "@/assets/pet-happy.png";
-import petLaugh from "@/assets/pet-laugh.png";
-import petJump from "@/assets/pet-jump.png";
-import petSleep from "@/assets/pet-sleep.png";
-import petCurious from "@/assets/pet-curious.png";
-import petLove from "@/assets/pet-love.png";
-import petWow from "@/assets/pet-wow.png";
-import petPlayful from "@/assets/pet-playful.png";
-import petRun from "@/assets/pet-run.png";
-import petDizzy from "@/assets/pet-dizzy.png";
+import { PetSwitcher, PetSwitcherTrigger } from "@/components/PetSwitcher";
+import { MOODS, Mood, PetId, getPet, loadPetId, moodImage, savePetId } from "@/lib/pets";
 import { cn } from "@/lib/utils";
 
 /* -------------------- 问候语库 -------------------- */
