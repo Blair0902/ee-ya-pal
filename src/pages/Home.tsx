@@ -631,6 +631,13 @@ const Home = () => {
           下拉换一张 ↓
         </p>
       </div>
+
+      <PetSwitcher
+        open={switcherOpen}
+        currentId={petId}
+        onPick={handlePickPet}
+        onClose={() => setSwitcherOpen(false)}
+      />
     </PhoneShell>
   );
 };
