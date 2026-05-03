@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { PetSwitcher, PetSwitcherTrigger } from "@/components/PetSwitcher";
+import appLogo from "@/assets/app-logo.png";
 import { MOODS, Mood, PetId, getPet, loadPetId, moodImage, savePetId } from "@/lib/pets";
 import { cn } from "@/lib/utils";
 
@@ -423,6 +424,14 @@ const Home = () => {
         {/* 顶栏：徽章 */}
         <header className="flex items-center justify-between gap-2 pt-4">
           <div className="flex items-center gap-2">
+            <img
+              src={appLogo}
+              alt="伊呀"
+              width={64}
+              height={64}
+              className="h-9 w-9 rounded-full object-contain drop-shadow-sm"
+              draggable={false}
+            />
             <Badge tone="level" icon={<Sparkles className="h-3.5 w-3.5" />} text={`Lv.${level}`} />
             <PetSwitcherTrigger currentId={petId} onClick={() => setSwitcherOpen(true)} />
           </div>
