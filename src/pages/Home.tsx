@@ -5,9 +5,11 @@ import { PhoneShell } from "@/components/PhoneShell";
 import { PetSwitcher } from "@/components/PetSwitcher";
 import { VoiceModal } from "@/components/modals/VoiceModal";
 import { MembershipModal } from "@/components/modals/MembershipModal";
+import { IdentityModal } from "@/components/modals/IdentityModal";
 import {
   PetId, getPet, loadPetId, savePetId, loadMember, MemberLevel, canUnlock, getPet as gp,
 } from "@/lib/pets";
+import { loadIdentity, loadKid, KidProfile, Identity } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 const Home = () => {
@@ -21,6 +23,11 @@ const Home = () => {
   const [memberOpen, setMemberOpen] = useState(false);
   const [memberReason, setMemberReason] = useState<string | undefined>();
   const [pendingLocked, setPendingLocked] = useState<PetId | null>(null);
+
+  // 身份门禁：第一次进"聊聊"必须选择身份
+  const [identity, setIdentity] = useState<Identity>(() => loadIdentity());
+  const [kid, setKid] = useState<KidProfile | null>(() => loadKid());
+  const [identityOpen, setIdentityOpen] = useState<boolean>(() => !loadIdentity());
 
   const [bounce, setBounce] = useState(0);
   const triggerBounce = () => setBounce((n) => n + 1);
