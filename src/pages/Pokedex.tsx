@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { Lock, Diamond, Check, Crown } from "lucide-react";
+import { Lock, Diamond, Crown, Star } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { MembershipModal } from "@/components/modals/MembershipModal";
+import { Sparkles, paletteFor } from "@/components/Sparkles";
 import {
   PETS, PetTier, PetId, MemberLevel, canUnlock, loadMember,
   loadPetId, savePetId, getPet,
