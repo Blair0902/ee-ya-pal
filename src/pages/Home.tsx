@@ -164,18 +164,19 @@ const Home = () => {
           ))}
         </div>
 
-        {/* 右侧悬浮交互按钮（汤姆猫风格） */}
-        <div className="absolute right-3 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-3">
-          <ActionButton label="喂零食" color="bg-[hsl(22_95%_70%)]" onClick={handleFeed}>
-            <Drumstick className="h-6 w-6 text-white" />
-          </ActionButton>
-          <ActionButton label="喝水" color="bg-[hsl(200_85%_68%)]" onClick={handleWater}>
-            <Droplet className="h-6 w-6 text-white" />
-          </ActionButton>
-          <ActionButton label="摸摸头" color="bg-[hsl(340_85%_72%)]" onClick={handlePet}>
-            <Hand className="h-6 w-6 text-white" />
-          </ActionButton>
-        </div>
+        {/* 右上角「切换萌宠」浮动按钮 */}
+        <button
+          onClick={() => setSwitcherOpen(true)}
+          aria-label="切换萌宠"
+          className="absolute right-3 top-2 z-20 flex flex-col items-center gap-1 active:scale-90"
+        >
+          <span className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(48_100%_88%)] to-[hsl(28_95%_82%)] shadow-pop ring-4 ring-white/70">
+            <RefreshCw className="h-5 w-5 text-[hsl(28_85%_45%)]" strokeWidth={2.8} />
+          </span>
+          <span className="rounded-full bg-card/90 px-2 py-0.5 font-display text-[10px] font-extrabold text-foreground/70 shadow-soft">
+            换萌宠
+          </span>
+        </button>
       </section>
 
       {/* 口头禅滚动 */}
@@ -187,29 +188,59 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 底部交互 */}
-      <section className="mt-4 flex items-end justify-around px-6">
-        <button onClick={() => setSwitcherOpen(true)} className="flex flex-col items-center gap-1.5 active:scale-95">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-soft">
-            <RefreshCw className="h-6 w-6 text-secondary-foreground" />
-          </span>
-          <span className="font-display text-[11px] font-bold text-foreground/70">切换萌宠</span>
-        </button>
+      {/* 底部交互：长按说话居中，互动按钮环绕 */}
+      <section className="relative mx-auto mt-6 flex h-44 w-full max-w-[360px] items-end justify-center">
+        {/* 左：喂零食 */}
+        <CartoonAction
+          label="喂零食"
+          emoji="🍖"
+          ring="from-[hsl(28_95%_88%)] to-[hsl(18_95%_78%)]"
+          chip="bg-[hsl(22_95%_70%)]"
+          className="absolute left-2 bottom-6"
+          onClick={handleFeed}
+        >
+          <Drumstick className="h-6 w-6 text-white" strokeWidth={2.6} />
+        </CartoonAction>
 
-        <button onPointerDown={onMicDown} onPointerUp={onMicUp} onClick={onMicTap}
-          aria-label="长按说话" className="flex flex-col items-center gap-2 active:scale-95">
-          <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-primary shadow-pop">
+        {/* 右：喝水 */}
+        <CartoonAction
+          label="喝水"
+          emoji="💧"
+          ring="from-[hsl(195_95%_90%)] to-[hsl(210_95%_80%)]"
+          chip="bg-[hsl(200_85%_62%)]"
+          className="absolute right-2 bottom-6"
+          onClick={handleWater}
+        >
+          <Droplet className="h-6 w-6 text-white" strokeWidth={2.6} />
+        </CartoonAction>
+
+        {/* 上：摸摸头 */}
+        <CartoonAction
+          label="摸摸头"
+          emoji="💖"
+          ring="from-[hsl(340_95%_92%)] to-[hsl(330_95%_82%)]"
+          chip="bg-[hsl(340_85%_68%)]"
+          className="absolute left-1/2 -top-1 -translate-x-1/2"
+          onClick={handlePet}
+        >
+          <Hand className="h-6 w-6 text-white" strokeWidth={2.6} />
+        </CartoonAction>
+
+        {/* 中心：长按说话 */}
+        <button
+          onPointerDown={onMicDown}
+          onPointerUp={onMicUp}
+          onClick={onMicTap}
+          aria-label="长按说话"
+          className="relative flex flex-col items-center gap-2 active:scale-95"
+        >
+          <span className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-primary shadow-pop ring-[6px] ring-white/80">
             <span className="absolute inset-0 animate-ping rounded-full bg-primary/30" />
-            <Mic className="h-9 w-9 text-primary-foreground" strokeWidth={2.5} />
+            <Mic className="h-10 w-10 text-primary-foreground" strokeWidth={2.6} />
           </span>
-          <span className="font-display text-[12px] font-extrabold text-primary">长按说话</span>
-        </button>
-
-        <button onClick={() => navigate("/pokedex")} className="flex flex-col items-center gap-1.5 active:scale-95">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-soft">
-            <Heart className="h-6 w-6 text-[hsl(348_88%_70%)]" />
+          <span className="rounded-full bg-white/90 px-3 py-1 font-display text-[12px] font-extrabold text-primary shadow-soft">
+            长按说话
           </span>
-          <span className="font-display text-[11px] font-bold text-foreground/70">我的收藏</span>
         </button>
       </section>
 
