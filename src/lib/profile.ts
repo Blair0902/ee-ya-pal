@@ -46,6 +46,26 @@ export const loadFavs = (): string[] => {
     return raw ? (JSON.parse(raw) as string[]) : [];
   } catch { return []; }
 };
+/* ===== 今日话题（每天可重新选择） ===== */
+const DAILY_KEY = "yiya.dailyTopics";
+type DailyTopics = { date: string; tags: string[] };
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+export const loadDailyTopics = (): string[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(DAILY_KEY);
+    if (!raw) return [];
+    const d = JSON.parse(raw) as DailyTopics;
+    return d.date === todayStr() ? d.tags : [];
+  } catch { return []; }
+};
+export const saveDailyTopics = (tags: string[]) => {
+  try {
+    window.localStorage.setItem(DAILY_KEY, JSON.stringify({ date: todayStr(), tags }));
+  } catch {}
+};
+
 export const toggleFav = (id: string): string[] => {
   const cur = loadFavs();
   const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
