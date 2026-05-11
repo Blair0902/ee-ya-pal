@@ -1,19 +1,20 @@
-import { Check, X } from "lucide-react";
-import { PETS, PetId, getPet } from "@/lib/pets";
+import { Check, X, Lock, Diamond } from "lucide-react";
+import { PETS, PetId, getPet, MemberLevel, canUnlock, TIER_LABEL } from "@/lib/pets";
 import { cn } from "@/lib/utils";
 
 type Props = {
   open: boolean;
   currentId: PetId;
+  member: MemberLevel;
   onPick: (id: PetId) => void;
+  onLockedPick: (id: PetId) => void;
   onClose: () => void;
 };
 
-/** 底部抽屉：选择/切换萌宠 */
-export const PetSwitcher = ({ open, currentId, onPick, onClose }: Props) => {
+/** 底部抽屉：选择/切换萌宠（含锁状态） */
+export const PetSwitcher = ({ open, currentId, member, onPick, onLockedPick, onClose }: Props) => {
   return (
     <>
-      {/* 遮罩 */}
       <div
         className={cn(
           "fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm transition-opacity duration-300",
@@ -22,14 +23,10 @@ export const PetSwitcher = ({ open, currentId, onPick, onClose }: Props) => {
         onClick={onClose}
         aria-hidden
       />
-      {/* 抽屉 */}
       <div
         role="dialog"
         aria-label="选择萌宠"
-        className={cn(
-          "fixed bottom-0 left-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 rounded-t-[2rem] bg-card pb-safe shadow-tab transition-transform duration-300 ease-out",
-          open ? "translate-y-0" : "translate-y-full",
-        )}
+        className="fixed bottom-0 left-1/2 z-50 w-full max-w-[480px] rounded-t-[2rem] bg-card pb-safe shadow-tab transition-transform duration-300 ease-out"
         style={{ transform: open ? "translate(-50%, 0)" : "translate(-50%, 100%)" }}
       >
         <div className="flex items-center justify-between px-5 pt-4">
@@ -49,10 +46,11 @@ export const PetSwitcher = ({ open, currentId, onPick, onClose }: Props) => {
         <div className="grid grid-cols-3 gap-3 p-5 pb-7">
           {PETS.map((p) => {
             const active = p.id === currentId;
+            const unlocked = canUnlock(member, p.tier);
             return (
               <button
                 key={p.id}
-                onClick={() => onPick(p.id)}
+                onClick={() => (unlocked ? onPick(p.id) : onLockedPick(p.id))}
                 className={cn(
                   "group relative flex flex-col items-center rounded-3xl p-2 pt-3 transition-all active:scale-[0.97]",
                   active
@@ -60,12 +58,27 @@ export const PetSwitcher = ({ open, currentId, onPick, onClose }: Props) => {
                     : "bg-secondary/40 hover:bg-secondary/60",
                 )}
               >
-                {active && (
+                {active && unlocked && (
                   <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-card shadow-soft">
                     <Check className="h-3 w-3 text-primary" strokeWidth={3} />
                   </span>
                 )}
-                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-card/70">
+                {!unlocked && (
+                  <span
+                    className={cn(
+                      "absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full text-white shadow-soft",
+                      p.tier === "monthly" ? "bg-[hsl(42_95%_60%)]" : "bg-[hsl(258_75%_68%)]",
+                    )}
+                  >
+                    {p.tier === "monthly" ? <Lock className="h-3 w-3" /> : <Diamond className="h-3 w-3" />}
+                  </span>
+                )}
+                <div
+                  className={cn(
+                    "flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-card/70",
+                    !unlocked && "opacity-60",
+                  )}
+                >
                   <img
                     src={p.images.idle}
                     alt={p.name}
@@ -90,7 +103,7 @@ export const PetSwitcher = ({ open, currentId, onPick, onClose }: Props) => {
                     active ? "text-primary-foreground/80" : "text-muted-foreground",
                   )}
                 >
-                  {p.species}
+                  {TIER_LABEL[p.tier]} · {p.species}
                 </span>
               </button>
             );
