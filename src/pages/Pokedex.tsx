@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import { Lock, Diamond, Crown, Star } from "lucide-react";
+import { Lock, Diamond, Check, Crown } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { MembershipModal } from "@/components/modals/MembershipModal";
-import { Sparkles, paletteFor } from "@/components/Sparkles";
 import {
   PETS, PetTier, PetId, MemberLevel, canUnlock, loadMember,
   loadPetId, savePetId, getPet,
@@ -44,23 +43,13 @@ const Pokedex = () => {
     }
   };
 
-  // 演示用的等级 / 幸福度（基于 id 哈希稳定生成）
-  const stats = (id: string) => {
-    let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-    return { lv: 3 + (h % 6), hap: 3 + (h % 3) };
-  };
-
   return (
     <PhoneShell>
-      <div className="relative px-5 pt-4 pt-safe pb-8">
-        <Sparkles />
-
-        <div className="relative flex items-end justify-between">
+      <div className="px-5 pt-4 pt-safe pb-8">
+        <div className="flex items-end justify-between">
           <div>
-            <h1 className="font-display text-[28px] font-extrabold leading-tight">萌宠图鉴</h1>
-            <p className="text-[12px] text-muted-foreground">
-              已收集 {PETS.filter((p) => canUnlock(member, p.tier)).length} / {PETS.length} 只
-            </p>
+            <h1 className="font-display text-[24px] font-extrabold">萌宠图鉴</h1>
+            <p className="text-[12px] text-muted-foreground">已收集 {PETS.filter((p) => canUnlock(member, p.tier)).length} / {PETS.length} 只</p>
           </div>
           <button
             onClick={() => setMemberOpen(true)}
@@ -72,88 +61,69 @@ const Pokedex = () => {
         </div>
 
         {grouped.map((sec) => (
-          <section key={sec.tier} className="relative mt-6">
+          <section key={sec.tier} className="mt-6">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-extrabold text-foreground">{sec.title}</h2>
-              <span className={cn("rounded-full px-2.5 py-1 font-display text-[11px] font-extrabold", sec.badgeClass)}>
+              <h2 className="font-display text-base font-extrabold text-foreground">{sec.title}</h2>
+              <span className={cn("rounded-full px-2 py-0.5 font-display text-[10px] font-extrabold", sec.badgeClass)}>
                 {sec.badge}
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground">{sec.hint}</p>
-
-            <div className="mt-3 grid grid-cols-2 gap-4">
+            <div className="mt-3 grid grid-cols-3 gap-3">
               {sec.pets.map((p) => {
                 const unlocked = canUnlock(member, p.tier);
                 const active = current === p.id && unlocked;
-                const palette = paletteFor(p.id);
-                const { lv, hap } = stats(p.id);
                 return (
                   <button
                     key={p.id}
                     onClick={() => onCard(p.id)}
                     className={cn(
-                      "relative flex flex-col rounded-[28px] bg-card p-2.5 pb-3 text-left shadow-card transition-all active:scale-[0.97]",
+                      "relative flex flex-col items-center rounded-3xl bg-card p-2.5 pt-3 shadow-card transition-all active:scale-[0.97]",
                       active && "ring-2 ring-primary",
                     )}
                   >
-                    {/* 彩色色块 + 宠物 */}
-                    <div className={cn("relative flex h-36 w-full items-end justify-center overflow-hidden rounded-[22px]", palette)}>
-                      <span className="absolute left-2 top-2 text-[hsl(48_100%_60%)] text-base">✦</span>
-                      <span className="absolute right-2 top-3 text-white/70 text-sm">✧</span>
+                    {active && (
+                      <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-primary shadow-pop">
+                        <Check className="h-3 w-3 text-primary-foreground" strokeWidth={3} />
+                      </span>
+                    )}
+                    {!unlocked && (
+                      <span
+                        className={cn(
+                          "absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full text-white shadow-soft",
+                          p.tier === "monthly" ? "bg-[hsl(42_95%_60%)]" : "bg-[hsl(258_75%_68%)]",
+                        )}
+                      >
+                        {p.tier === "monthly" ? <Lock className="h-3 w-3" /> : <Diamond className="h-3 w-3" />}
+                      </span>
+                    )}
+                    <div className={cn("flex h-20 w-full items-center justify-center", !unlocked && "opacity-55 grayscale-[40%]")}>
                       <img
                         src={p.images.idle}
                         alt={p.name}
                         width={1024}
                         height={1024}
-                        className={cn(
-                          "h-[110%] object-contain drop-shadow-md transition-transform",
-                          !unlocked && "opacity-60 grayscale-[60%]",
-                          active && "scale-105",
-                        )}
+                        className="h-full object-contain"
                         loading="lazy"
                         draggable={false}
                       />
-                      {!unlocked && (
-                        <span
-                          className={cn(
-                            "absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-white shadow-pop",
-                            p.tier === "monthly" ? "bg-[hsl(42_95%_55%)]" : "bg-[hsl(258_75%_60%)]",
-                          )}
-                        >
-                          {p.tier === "monthly" ? <Lock className="h-3.5 w-3.5" /> : <Diamond className="h-3.5 w-3.5" />}
-                        </span>
+                    </div>
+                    <div className="mt-1 font-display text-[12px] font-extrabold text-foreground">{p.name}</div>
+                    <div className="text-[10px] text-muted-foreground line-clamp-2 text-center leading-tight">
+                      {p.trait}
+                    </div>
+                    <span
+                      className={cn(
+                        "mt-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-extrabold",
+                        unlocked
+                          ? active
+                            ? "bg-gradient-primary text-primary-foreground"
+                            : "bg-secondary text-secondary-foreground"
+                          : "bg-muted text-muted-foreground",
                       )}
-                      {active && (
-                        <span className="absolute right-2 top-2 rounded-full bg-gradient-primary px-2 py-0.5 font-display text-[10px] font-extrabold text-primary-foreground shadow-pop">
-                          陪伴中
-                        </span>
-                      )}
-                    </div>
-
-                    {/* 名字 + Lv */}
-                    <div className="mt-2 flex items-center justify-between gap-1 px-1">
-                      <span className="truncate font-display text-[16px] font-extrabold text-foreground">{p.name}</span>
-                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 font-display text-[10px] font-extrabold text-foreground/70">
-                        Lv {lv}
-                      </span>
-                    </div>
-
-                    {/* 幸福度星星 */}
-                    <div className="mt-1 flex items-center gap-1.5 px-1">
-                      <span className="font-display text-[10px] font-bold text-muted-foreground">Happiness</span>
-                      <div className="flex">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                          <Star
-                            key={i}
-                            className={cn(
-                              "h-3 w-3",
-                              i <= hap ? "fill-[hsl(42_100%_60%)] text-[hsl(42_100%_60%)]" : "text-muted-foreground/40",
-                            )}
-                            strokeWidth={2}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                    >
+                      {unlocked ? (active ? "陪伴中" : "已解锁") : "未解锁"}
+                    </span>
                   </button>
                 );
               })}
