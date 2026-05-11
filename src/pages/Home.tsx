@@ -74,11 +74,25 @@ const Home = () => {
     "喵呜～你的手好温柔。",
   ]);
 
-  // 语音长按
-  const pressTimer = useRef<number | null>(null);
-  const onMicDown = () => { pressTimer.current = window.setTimeout(() => setVoiceOpen(true), 200); };
-  const onMicUp = () => { if (pressTimer.current) window.clearTimeout(pressTimer.current); };
-  const onMicTap = () => setVoiceOpen(true);
+  // 语音长按 → 直接在页面内做"聆听"反馈（不再弹出二次弹窗）
+  const [listening, setListening] = useState(false);
+  const listenTimer = useRef<number | null>(null);
+  const stopListen = () => {
+    if (listenTimer.current) { window.clearTimeout(listenTimer.current); listenTimer.current = null; }
+    setListening(false);
+    fireReaction("🗣️", "对话", [
+      "我在听呢～你说的我都记住啦！",
+      "嗯嗯！再多陪我说一会儿好不好？",
+      "喵～我超喜欢和你聊天的！",
+    ]);
+  };
+  const onMicDown = () => {
+    setListening(true);
+    if (listenTimer.current) window.clearTimeout(listenTimer.current);
+    listenTimer.current = window.setTimeout(stopListen, 4000);
+  };
+  const onMicUp = () => { if (listening) stopListen(); };
+  const onMicTap = () => { onMicDown(); window.setTimeout(onMicUp, 900); };
 
   const handlePick = (id: PetId) => {
     setPetId(id); savePetId(id); setSwitcherOpen(false); setPetBounce((n) => n + 1);
@@ -188,61 +202,62 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 底部交互：长按说话居中，互动按钮环绕 */}
-      <section className="relative mx-auto mt-6 flex h-44 w-full max-w-[360px] items-end justify-center">
-        {/* 左：喂零食 */}
-        <CartoonAction
-          label="喂零食"
-          emoji="🍖"
-          ring="from-[hsl(28_95%_88%)] to-[hsl(18_95%_78%)]"
-          chip="bg-[hsl(22_95%_70%)]"
-          className="absolute left-2 bottom-6"
-          onClick={handleFeed}
-        >
-          <Drumstick className="h-6 w-6 text-white" strokeWidth={2.6} />
-        </CartoonAction>
+      {/* 底部交互：长按说话 + 三颗卡通互动按钮，并排 */}
+      <section className="mt-6 px-5">
+        {/* 长按说话（独立一行，更突出） */}
+        <div className="flex justify-center">
+          <button
+            onPointerDown={onMicDown}
+            onPointerUp={onMicUp}
+            onPointerLeave={onMicUp}
+            onClick={onMicTap}
+            aria-label="长按说话"
+            className="flex flex-col items-center gap-2 active:scale-95"
+          >
+            <span className={cn(
+              "relative flex h-20 w-20 items-center justify-center rounded-full shadow-pop ring-[6px] ring-white/85 transition-colors",
+              listening ? "bg-gradient-to-br from-[hsl(348_88%_70%)] to-[hsl(28_95%_65%)]" : "bg-gradient-primary",
+            )}>
+              {listening && <span className="absolute inset-0 animate-ping rounded-full bg-[hsl(348_88%_70%)]/40" />}
+              <Mic className="h-9 w-9 text-primary-foreground" strokeWidth={2.6} />
+            </span>
+            <span className="rounded-full bg-white/95 px-3 py-1 font-display text-[12px] font-extrabold text-primary shadow-soft">
+              {listening ? "聆听中…" : "长按说话"}
+            </span>
+          </button>
+        </div>
 
-        {/* 右：喝水 */}
-        <CartoonAction
-          label="喝水"
-          emoji="💧"
-          ring="from-[hsl(195_95%_90%)] to-[hsl(210_95%_80%)]"
-          chip="bg-[hsl(200_85%_62%)]"
-          className="absolute right-2 bottom-6"
-          onClick={handleWater}
-        >
-          <Droplet className="h-6 w-6 text-white" strokeWidth={2.6} />
-        </CartoonAction>
+        {/* 三颗互动按钮，并排 */}
+        <div className="mt-4 flex items-end justify-around">
+          <CartoonAction
+            label="喂零食" emoji="🍖"
+            ring="from-[hsl(28_95%_88%)] to-[hsl(18_95%_78%)]"
+            chip="bg-[hsl(22_95%_70%)]"
+            onClick={handleFeed}
+          >
+            <Drumstick className="h-6 w-6 text-white" strokeWidth={2.6} />
+          </CartoonAction>
 
-        {/* 上：摸摸头 */}
-        <CartoonAction
-          label="摸摸头"
-          emoji="💖"
-          ring="from-[hsl(340_95%_92%)] to-[hsl(330_95%_82%)]"
-          chip="bg-[hsl(340_85%_68%)]"
-          className="absolute left-1/2 -top-1 -translate-x-1/2"
-          onClick={handlePet}
-        >
-          <Hand className="h-6 w-6 text-white" strokeWidth={2.6} />
-        </CartoonAction>
+          <CartoonAction
+            label="摸摸头" emoji="💖"
+            ring="from-[hsl(340_95%_92%)] to-[hsl(330_95%_82%)]"
+            chip="bg-[hsl(340_85%_68%)]"
+            onClick={handlePet}
+          >
+            <Hand className="h-6 w-6 text-white" strokeWidth={2.6} />
+          </CartoonAction>
 
-        {/* 中心：长按说话 */}
-        <button
-          onPointerDown={onMicDown}
-          onPointerUp={onMicUp}
-          onClick={onMicTap}
-          aria-label="长按说话"
-          className="relative flex flex-col items-center gap-2 active:scale-95"
-        >
-          <span className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-primary shadow-pop ring-[6px] ring-white/80">
-            <span className="absolute inset-0 animate-ping rounded-full bg-primary/30" />
-            <Mic className="h-10 w-10 text-primary-foreground" strokeWidth={2.6} />
-          </span>
-          <span className="rounded-full bg-white/90 px-3 py-1 font-display text-[12px] font-extrabold text-primary shadow-soft">
-            长按说话
-          </span>
-        </button>
+          <CartoonAction
+            label="喝水" emoji="💧"
+            ring="from-[hsl(195_95%_90%)] to-[hsl(210_95%_80%)]"
+            chip="bg-[hsl(200_85%_62%)]"
+            onClick={handleWater}
+          >
+            <Droplet className="h-6 w-6 text-white" strokeWidth={2.6} />
+          </CartoonAction>
+        </div>
       </section>
+
 
       <PetSwitcher open={switcherOpen} currentId={petId} member={member}
         onPick={handlePick} onLockedPick={handleLockedPick} onClose={() => setSwitcherOpen(false)} />
