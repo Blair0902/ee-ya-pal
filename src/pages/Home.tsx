@@ -144,12 +144,12 @@ const Home = () => {
               ref={videoRef}
               src={siameseVideo}
               autoPlay loop muted playsInline
-              className="absolute left-1/2 top-1/2 h-[90%] -translate-x-1/2 -translate-y-1/2 object-contain animate-float-slow drop-shadow-2xl"
-              style={{ background: "transparent" }}
+              className="absolute inset-0 m-auto h-[96%] w-full object-contain animate-float-slow drop-shadow-2xl"
+              style={{ background: "transparent", objectPosition: "center 55%" }}
             />
           ) : (
             <img src={pet.images.idle} alt={pet.name} draggable={false}
-              className="absolute left-1/2 top-1/2 h-[90%] -translate-x-1/2 -translate-y-1/2 object-contain animate-float-slow drop-shadow-2xl" />
+              className="absolute inset-0 m-auto h-[90%] w-full object-contain animate-float-slow drop-shadow-2xl" />
           )}
         </div>
 
