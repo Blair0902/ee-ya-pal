@@ -74,11 +74,25 @@ const Home = () => {
     "喵呜～你的手好温柔。",
   ]);
 
-  // 语音长按
-  const pressTimer = useRef<number | null>(null);
-  const onMicDown = () => { pressTimer.current = window.setTimeout(() => setVoiceOpen(true), 200); };
-  const onMicUp = () => { if (pressTimer.current) window.clearTimeout(pressTimer.current); };
-  const onMicTap = () => setVoiceOpen(true);
+  // 语音长按 → 直接在页面内做"聆听"反馈（不再弹出二次弹窗）
+  const [listening, setListening] = useState(false);
+  const listenTimer = useRef<number | null>(null);
+  const stopListen = () => {
+    if (listenTimer.current) { window.clearTimeout(listenTimer.current); listenTimer.current = null; }
+    setListening(false);
+    fireReaction("🗣️", "对话", [
+      "我在听呢～你说的我都记住啦！",
+      "嗯嗯！再多陪我说一会儿好不好？",
+      "喵～我超喜欢和你聊天的！",
+    ]);
+  };
+  const onMicDown = () => {
+    setListening(true);
+    if (listenTimer.current) window.clearTimeout(listenTimer.current);
+    listenTimer.current = window.setTimeout(stopListen, 4000);
+  };
+  const onMicUp = () => { if (listening) stopListen(); };
+  const onMicTap = () => { onMicDown(); window.setTimeout(onMicUp, 900); };
 
   const handlePick = (id: PetId) => {
     setPetId(id); savePetId(id); setSwitcherOpen(false); setPetBounce((n) => n + 1);
