@@ -5,9 +5,11 @@ import { PhoneShell } from "@/components/PhoneShell";
 import { PetSwitcher } from "@/components/PetSwitcher";
 import { VoiceModal } from "@/components/modals/VoiceModal";
 import { MembershipModal } from "@/components/modals/MembershipModal";
+import { IdentityModal } from "@/components/modals/IdentityModal";
 import {
   PetId, getPet, loadPetId, savePetId, loadMember, MemberLevel, canUnlock, getPet as gp,
 } from "@/lib/pets";
+import { loadIdentity, loadKid, KidProfile, Identity } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 const Home = () => {
@@ -21,6 +23,11 @@ const Home = () => {
   const [memberOpen, setMemberOpen] = useState(false);
   const [memberReason, setMemberReason] = useState<string | undefined>();
   const [pendingLocked, setPendingLocked] = useState<PetId | null>(null);
+
+  // 身份门禁：第一次进"聊聊"必须选择身份
+  const [identity, setIdentity] = useState<Identity>(() => loadIdentity());
+  const [kid, setKid] = useState<KidProfile | null>(() => loadKid());
+  const [identityOpen, setIdentityOpen] = useState<boolean>(() => !loadIdentity());
 
   const [bounce, setBounce] = useState(0);
   const triggerBounce = () => setBounce((n) => n + 1);
@@ -65,6 +72,15 @@ const Home = () => {
           <Lock className="h-5 w-5 text-foreground/70" />
         </button>
         <button
+          onClick={() => setIdentityOpen(true)}
+          className="flex max-w-[55%] items-center gap-1.5 rounded-full bg-card px-3 py-1.5 shadow-soft active:scale-95"
+        >
+          <span className="text-base">{identity === "parent" ? "🛡️" : "🧒"}</span>
+          <span className="truncate font-display text-[12px] font-extrabold text-foreground/80">
+            {kid?.name ? `Hi，${kid.name}` : "选择身份"}
+          </span>
+        </button>
+        <button
           onClick={() => setMemberOpen(true)}
           className={cn(
             "inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-display text-[12px] font-extrabold shadow-soft active:scale-95",
@@ -74,7 +90,7 @@ const Home = () => {
           )}
         >
           <Crown className="h-3.5 w-3.5" />
-          {member === "yearly" ? "年卡 VIP" : member === "monthly" ? "月卡 VIP" : "开通会员"}
+          {member === "yearly" ? "年" : member === "monthly" ? "月" : "会员"}
         </button>
       </header>
 
@@ -161,6 +177,16 @@ const Home = () => {
         onClose={() => setMemberOpen(false)}
         onSubscribed={onSubscribed}
         reason={memberReason}
+      />
+      <IdentityModal
+        open={identityOpen}
+        required={!identity}
+        onClose={() => setIdentityOpen(false)}
+        onDone={(id, k) => {
+          setIdentity(id);
+          if (k) setKid(k);
+          setIdentityOpen(false);
+        }}
       />
     </PhoneShell>
   );
