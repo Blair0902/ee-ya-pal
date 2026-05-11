@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Sparkles, SkipBack, SkipForward, Play, Pause, Heart, Lightbulb, Wand2, Settings2,
+  Sparkles, SkipBack, SkipForward, Play, Pause, Heart, Lightbulb, Wand2,
+  Settings2, ChevronUp, ChevronDown, X, Check, RefreshCw, CalendarDays,
 } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { IdentityModal } from "@/components/modals/IdentityModal";
-import { loadKid, KidProfile, loadFavs, toggleFav } from "@/lib/profile";
+import {
+  loadKid, KidProfile, loadFavs, toggleFav,
+  INTEREST_TAGS, loadDailyTopics, saveDailyTopics,
+} from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 /* ---------- 5 大分类 ---------- */
@@ -52,6 +56,69 @@ const STORIES: Record<TabKey, Story[]> = {
   ],
 };
 
+/* ---------- 一键生成的故事段落 ---------- */
+type Seg =
+  | { kind: "text"; emoji: string; text: string; pinyin: string }
+  | { kind: "quiz"; q: string; pinyin: string; options: string[]; answer: number; hint: string };
+
+type GenStory = { title: string; emoji: string; tabKey: TabKey; segs: Seg[] };
+
+const stripTag = (t: string) => t.replace(/^[^\u4e00-\u9fa5A-Za-z]+/, "").trim();
+
+const buildGenStory = (kidName: string, interestTag: string, tabKey: TabKey): GenStory => {
+  const interest = stripTag(interestTag) || "自然";
+  const tab = TABS.find((t) => t.key === tabKey)!;
+  const segs: Seg[] = [
+    {
+      kind: "text", emoji: "🌅",
+      text: `从前有一个小朋友叫${kidName}，他特别喜欢${interest}。`,
+      pinyin: `cóng qián yǒu yí gè xiǎo péng yǒu jiào ${kidName}, tā tè bié xǐ huān ${interest}.`,
+    },
+    {
+      kind: "text", emoji: "🪄",
+      text: `这一天，窗外飞来一只会说话的小精灵，邀请${kidName}一起去探险。`,
+      pinyin: `zhè yì tiān, chuāng wài fēi lái yì zhī huì shuō huà de xiǎo jīng líng, yāo qǐng ${kidName} yì qǐ qù tàn xiǎn.`,
+    },
+    {
+      kind: "quiz",
+      q: "彩虹一共有几种颜色呢？",
+      pinyin: "cǎi hóng yí gòng yǒu jǐ zhǒng yán sè ne?",
+      options: ["5 种", "7 种", "10 种"],
+      answer: 1,
+      hint: "红橙黄绿青蓝紫，一共 7 种呀！",
+    },
+    {
+      kind: "text", emoji: "🌈",
+      text: `${kidName}骄傲地说：我知道，是七种颜色！小精灵竖起了大拇指。`,
+      pinyin: `${kidName} jiāo ào de shuō: wǒ zhī dào, shì qī zhǒng yán sè! xiǎo jīng líng shù qǐ le dà mǔ zhǐ.`,
+    },
+    {
+      kind: "text", emoji: "🚦",
+      text: `他们一起穿过马路，要去神奇的${interest}王国。`,
+      pinyin: `tā men yì qǐ chuān guò mǎ lù, yào qù shén qí de ${interest} wáng guó.`,
+    },
+    {
+      kind: "quiz",
+      q: "过马路看到红灯，应该怎么做？",
+      pinyin: "guò mǎ lù kàn dào hóng dēng, yīng gāi zěn me zuò?",
+      options: ["停下等待", "快快冲过", "和朋友赛跑"],
+      answer: 0,
+      hint: "红灯停、绿灯行，安全最重要！",
+    },
+    {
+      kind: "text", emoji: "🏆",
+      text: `小精灵笑着说：${kidName}真是个聪明又懂安全的好孩子！`,
+      pinyin: `xiǎo jīng líng xiào zhe shuō: ${kidName} zhēn shì gè cōng míng yòu dǒng ān quán de hǎo hái zi!`,
+    },
+    {
+      kind: "text", emoji: "🌙",
+      text: `今天的${tab.label}小故事就到这里啦，晚安，做个甜甜的梦～`,
+      pinyin: `jīn tiān de ${tab.label} xiǎo gù shì jiù dào zhè lǐ la, wǎn ān, zuò gè tián tián de mèng~`,
+    },
+  ];
+  return { title: `${kidName}和${interest}的奇遇`, emoji: "✨", tabKey, segs };
+};
+
 const Story = () => {
   const [tab, setTab] = useState<TabKey>("puzzle");
   const [kid, setKid] = useState<KidProfile | null>(() => loadKid());
@@ -61,6 +128,17 @@ const Story = () => {
   const [playing, setPlaying] = useState(false);
   const [now, setNow] = useState<Story>(STORIES.puzzle[0]);
   const [tip, setTip] = useState<string | null>(null);
+
+  // 今日话题（每天可重新选择）
+  const [topics, setTopics] = useState<string[]>(() => loadDailyTopics());
+  const [topicsOpen, setTopicsOpen] = useState(false);
+
+  // 生成的故事 & 全屏阅读视图
+  const [gen, setGen] = useState<GenStory | null>(null);
+  const [genOpen, setGenOpen] = useState(false);
+
+  // 播放栏向上展开（拼音版）
+  const [expanded, setExpanded] = useState(false);
 
   // 故事播放过程中，每隔 6s 浮一条小知识/好习惯提醒
   const tipTimer = useRef<number | null>(null);
@@ -79,27 +157,29 @@ const Story = () => {
 
   const list = STORIES[tab];
   const kidName = kid?.name || "小宝贝";
+  const tabMeta = TABS.find((t) => t.key === tab)!;
 
-  /** 一键生成专属故事：基于孩子姓名 + 兴趣标签 + 当前分类，组装一条新卡片插到最前 */
-  const customRef = useRef<Story | null>(null);
+  // 当前可用兴趣 = 今日话题 ∪ 资料里的兴趣
+  const activeInterests = useMemo(() => {
+    const merged = Array.from(new Set([...(topics || []), ...(kid?.interests || [])]));
+    return merged;
+  }, [topics, kid]);
+
+  /** 一键生成 → 打开全屏故事阅读 */
   const generateMine = () => {
-    const interest = (kid?.interests?.[Math.floor(Math.random() * (kid?.interests?.length || 1))]) || "🌈 自然";
-    const trimmed = interest.replace(/^[^\u4e00-\u9fa5A-Za-z]+/, "");
-    const tabLabel = TABS.find((t) => t.key === tab)?.label ?? "";
-    const story: Story = {
-      id: `mine-${Date.now()}`,
-      title: `${kidName}和${trimmed}的奇遇`,
-      desc: `${kidName}今天要和小伙伴一起，去${trimmed}世界探险，学会勇敢和分享～`,
-      mins: 6,
-      emoji: "✨",
-      tip: `小宝贝的专属故事里，悄悄藏了一个『${tabLabel}』小知识，听到了吗？`,
-    };
-    customRef.current = story;
-    setNow(story);
+    const pool = activeInterests.length ? activeInterests : ["🌈 自然"];
+    const interest = pool[Math.floor(Math.random() * pool.length)];
+    const story = buildGenStory(kidName, interest, tab);
+    setGen(story);
+    setGenOpen(true);
+    setNow({
+      id: `mine-${Date.now()}`, title: story.title, desc: story.segs[0].kind === "text" ? story.segs[0].text : "",
+      mins: 6, emoji: story.emoji, tip: "听故事时，认真思考小问题哦～",
+    });
     setPlaying(true);
   };
 
-  const playStory = (s: Story) => { setNow(s); setPlaying(true); };
+  const playStory = (s: Story) => { setNow(s); setPlaying(true); setGenOpen(false); };
   const stepStory = (dir: 1 | -1) => {
     const idx = list.findIndex((s) => s.id === now.id);
     const next = list[(idx + dir + list.length) % list.length] || list[0];
@@ -107,7 +187,13 @@ const Story = () => {
   };
   const onFav = () => setFavs(toggleFav(now.id));
 
-  const tabMeta = TABS.find((t) => t.key === tab)!;
+  const toggleTopic = (t: string) => {
+    setTopics((prev) => {
+      const n = prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t];
+      saveDailyTopics(n);
+      return n;
+    });
+  };
 
   return (
     <PhoneShell>
@@ -152,6 +238,21 @@ const Story = () => {
           </div>
         </div>
 
+        {/* 今日话题（每天可重新选择） */}
+        <button
+          onClick={() => setTopicsOpen(true)}
+          className="mt-3 flex w-full items-center gap-2 rounded-2xl bg-card px-3.5 py-2.5 text-left shadow-soft active:scale-[0.99]"
+        >
+          <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
+          <div className="min-w-0 flex-1">
+            <div className="font-display text-[12px] font-extrabold text-foreground/80">今日感兴趣的话题</div>
+            <div className="truncate text-[11.5px] text-muted-foreground">
+              {topics.length ? topics.join(" · ") : "点击挑选，今天最想听什么？"}
+            </div>
+          </div>
+          <RefreshCw className="h-4 w-4 text-foreground/40" />
+        </button>
+
         {/* 极简一键生成专属故事 */}
         <div className={cn("mt-4 overflow-hidden rounded-[28px] bg-gradient-to-br p-5 shadow-card", tabMeta.color)}>
           <div className="flex items-center gap-2">
@@ -160,12 +261,12 @@ const Story = () => {
           </div>
           <p className="mt-1.5 font-display text-[18px] font-extrabold leading-snug text-foreground">
             为 <span className="text-primary">{kidName}</span> 量身讲一个充满
-            <span className="text-primary"> {kid?.interests?.[0]?.replace(/^[^\u4e00-\u9fa5A-Za-z]+/, "") || "小惊喜"} </span>
+            <span className="text-primary"> {stripTag(activeInterests[0] || "") || "小惊喜"} </span>
             的故事吧！
           </p>
-          {kid?.interests?.length ? (
+          {activeInterests.length ? (
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {kid.interests.slice(0, 5).map((t) => (
+              {activeInterests.slice(0, 6).map((t) => (
                 <span key={t} className="rounded-full bg-white/70 px-2.5 py-0.5 font-display text-[11px] font-extrabold text-foreground/70">
                   {t}
                 </span>
@@ -173,7 +274,7 @@ const Story = () => {
             </div>
           ) : (
             <button
-              onClick={() => setIdentityOpen(true)}
+              onClick={() => setTopicsOpen(true)}
               className="mt-2 font-display text-[11px] font-extrabold text-primary underline"
             >
               + 添加宝贝的兴趣
@@ -220,8 +321,18 @@ const Story = () => {
         </div>
       </div>
 
+      {/* 生成故事全屏阅读 */}
+      {genOpen && gen && (
+        <GeneratedStoryView
+          story={gen}
+          tabColor={TABS.find((t) => t.key === gen.tabKey)!.color}
+          onClose={() => setGenOpen(false)}
+          onRegen={generateMine}
+        />
+      )}
+
       {/* 播放过程中悬浮的小知识气泡 */}
-      {playing && tip && (
+      {playing && tip && !expanded && !genOpen && (
         <div className="pointer-events-none fixed bottom-44 left-1/2 z-30 w-[88%] max-w-[420px] -translate-x-1/2 animate-fade-in">
           <div className="flex items-start gap-2 rounded-2xl bg-foreground/90 px-3.5 py-2.5 text-background shadow-pet backdrop-blur">
             <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(48_100%_70%)]" />
@@ -230,53 +341,30 @@ const Story = () => {
         </div>
       )}
 
-      {/* 音频播放控制栏 */}
-      <div className="fixed bottom-24 left-1/2 z-30 w-[94%] max-w-[460px] -translate-x-1/2 rounded-[28px] bg-card px-3.5 py-3 shadow-pet">
-        <div className="flex items-center gap-3">
-          <div className={cn("flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-2xl", tabMeta.color)}>
-            {now.emoji}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate font-display text-[14px] font-extrabold text-foreground">{now.title}</div>
-            <div className="truncate text-[11px] text-muted-foreground">
-              {tabMeta.label} · {playing ? "播放中" : "已暂停"}
-            </div>
-          </div>
-        </div>
-        <div className="mt-2 flex items-center justify-around">
-          <button
-            onClick={() => stepStory(-1)}
-            aria-label="上一首"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-foreground/70 active:scale-90"
-          >
-            <SkipBack className="h-5 w-5" />
-          </button>
-          <button
-            onClick={() => setPlaying((p) => !p)}
-            aria-label={playing ? "暂停" : "播放"}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-primary-foreground shadow-pop active:scale-90"
-          >
-            {playing ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 translate-x-0.5" />}
-          </button>
-          <button
-            onClick={() => stepStory(1)}
-            aria-label="下一首"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-foreground/70 active:scale-90"
-          >
-            <SkipForward className="h-5 w-5" />
-          </button>
-          <button
-            onClick={onFav}
-            aria-label="收藏"
-            className={cn(
-              "flex h-11 w-11 items-center justify-center rounded-full active:scale-90",
-              favs.includes(now.id) ? "bg-[hsl(348_88%_70%)]/15 text-[hsl(348_88%_70%)]" : "bg-muted text-foreground/70",
-            )}
-          >
-            <Heart className={cn("h-5 w-5", favs.includes(now.id) && "fill-current")} />
-          </button>
-        </div>
-      </div>
+      {/* 音频播放控制栏（可上拉展开拼音版文字） */}
+      <PlayerBar
+        now={now}
+        tabMeta={tabMeta}
+        playing={playing}
+        favs={favs}
+        expanded={expanded}
+        gen={gen}
+        onTogglePlay={() => setPlaying((p) => !p)}
+        onPrev={() => stepStory(-1)}
+        onNext={() => stepStory(1)}
+        onFav={onFav}
+        onToggleExpand={() => setExpanded((v) => !v)}
+      />
+
+      {/* 今日话题选择弹窗 */}
+      {topicsOpen && (
+        <DailyTopicsSheet
+          selected={topics}
+          onToggle={toggleTopic}
+          onClose={() => setTopicsOpen(false)}
+          onClear={() => { setTopics([]); saveDailyTopics([]); }}
+        />
+      )}
 
       <IdentityModal
         open={identityOpen}
@@ -289,5 +377,289 @@ const Story = () => {
     </PhoneShell>
   );
 };
+
+/* ---------- 播放栏（含上拉展开） ---------- */
+const PlayerBar = ({
+  now, tabMeta, playing, favs, expanded, gen,
+  onTogglePlay, onPrev, onNext, onFav, onToggleExpand,
+}: {
+  now: Story;
+  tabMeta: typeof TABS[number];
+  playing: boolean;
+  favs: string[];
+  expanded: boolean;
+  gen: GenStory | null;
+  onTogglePlay: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  onFav: () => void;
+  onToggleExpand: () => void;
+}) => {
+  return (
+    <>
+      {/* 展开遮罩 */}
+      {expanded && (
+        <div className="fixed inset-0 z-30 bg-foreground/30 backdrop-blur-sm animate-fade-in" onClick={onToggleExpand} />
+      )}
+
+      <div
+        className={cn(
+          "fixed left-1/2 z-40 w-[94%] max-w-[460px] -translate-x-1/2 rounded-[28px] bg-card shadow-pet transition-all duration-300",
+          expanded ? "bottom-4 max-h-[78vh]" : "bottom-24",
+        )}
+      >
+        {/* 拉手 */}
+        <button
+          onClick={onToggleExpand}
+          className="flex w-full justify-center pt-2"
+          aria-label={expanded ? "收起" : "展开文字版"}
+        >
+          <span className="flex items-center gap-1 rounded-full bg-muted/70 px-3 py-0.5 font-display text-[10.5px] font-extrabold text-foreground/60">
+            {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+            {expanded ? "收起文字版" : "上拉看拼音故事"}
+          </span>
+        </button>
+
+        {/* 展开区：拼音故事 */}
+        {expanded && (
+          <div className="max-h-[52vh] overflow-y-auto px-4 pb-3 pt-2">
+            <div className="mb-2 font-display text-[16px] font-extrabold text-foreground">
+              {now.emoji} {now.title}
+            </div>
+            {gen ? (
+              <div className="space-y-3">
+                {gen.segs.map((s, i) => (
+                  <PinyinBlock key={i} seg={s} />
+                ))}
+              </div>
+            ) : (
+              <PinyinBlock
+                seg={{
+                  kind: "text",
+                  emoji: now.emoji,
+                  text: now.desc,
+                  pinyin: "diǎn jī「yī jiàn shēng chéng」, kě yǐ tīng dài pīn yīn de zhuān shǔ gù shì ya~",
+                }}
+              />
+            )}
+            <div className="h-2" />
+          </div>
+        )}
+
+        {/* 控制条 */}
+        <div className="px-3.5 pb-3 pt-1">
+          <div className="flex items-center gap-3">
+            <div className={cn("flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-2xl", tabMeta.color)}>
+              {now.emoji}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-display text-[14px] font-extrabold text-foreground">{now.title}</div>
+              <div className="truncate text-[11px] text-muted-foreground">
+                {tabMeta.label} · {playing ? "播放中" : "已暂停"}
+              </div>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center justify-around">
+            <button onClick={onPrev} aria-label="上一首"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-foreground/70 active:scale-90">
+              <SkipBack className="h-5 w-5" />
+            </button>
+            <button onClick={onTogglePlay} aria-label={playing ? "暂停" : "播放"}
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-primary-foreground shadow-pop active:scale-90">
+              {playing ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 translate-x-0.5" />}
+            </button>
+            <button onClick={onNext} aria-label="下一首"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-foreground/70 active:scale-90">
+              <SkipForward className="h-5 w-5" />
+            </button>
+            <button onClick={onFav} aria-label="收藏"
+              className={cn(
+                "flex h-11 w-11 items-center justify-center rounded-full active:scale-90",
+                favs.includes(now.id) ? "bg-[hsl(348_88%_70%)]/15 text-[hsl(348_88%_70%)]" : "bg-muted text-foreground/70",
+              )}>
+              <Heart className={cn("h-5 w-5", favs.includes(now.id) && "fill-current")} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+/* ---------- 拼音段落块 ---------- */
+const PinyinBlock = ({ seg }: { seg: Seg }) => {
+  if (seg.kind === "quiz") {
+    return (
+      <div className="rounded-2xl bg-[hsl(48_100%_94%)] p-3">
+        <div className="font-display text-[10.5px] font-extrabold text-[hsl(28_85%_55%)]">🧩 小问答</div>
+        <div className="mt-0.5 leading-tight text-foreground/60 text-[10.5px] tracking-wide">{seg.pinyin}</div>
+        <div className="font-display text-[15px] font-extrabold text-foreground">{seg.q}</div>
+        <div className="mt-2 grid grid-cols-3 gap-1.5">
+          {seg.options.map((o, i) => (
+            <span key={i} className={cn(
+              "rounded-xl bg-white px-2 py-1.5 text-center font-display text-[11.5px] font-extrabold",
+              i === seg.answer ? "text-[hsl(140_55%_45%)] ring-1 ring-[hsl(140_55%_70%)]" : "text-foreground/70",
+            )}>{o}</span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-2xl bg-card px-1 py-1">
+      <div className="flex items-start gap-2">
+        <span className="text-2xl">{seg.emoji}</span>
+        <div className="flex-1">
+          <div className="leading-tight text-foreground/55 text-[10.5px] tracking-wide">{seg.pinyin}</div>
+          <div className="font-display text-[16px] font-extrabold leading-relaxed text-foreground">{seg.text}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ---------- 全屏故事阅读（带百科问答互动） ---------- */
+const GeneratedStoryView = ({
+  story, tabColor, onClose, onRegen,
+}: { story: GenStory; tabColor: string; onClose: () => void; onRegen: () => void }) => {
+  const [picks, setPicks] = useState<Record<number, number>>({});
+
+  const pick = (i: number, v: number) => setPicks((p) => ({ ...p, [i]: v }));
+
+  return (
+    <div className="fixed inset-0 z-40 mx-auto flex max-w-[480px] flex-col bg-gradient-sky animate-fade-in">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-sun opacity-70" />
+      <header className="relative flex items-center justify-between px-4 pt-4 pt-safe">
+        <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-soft active:scale-95">
+          <X className="h-5 w-5 text-foreground/70" />
+        </button>
+        <div className="font-display text-[14px] font-extrabold text-foreground/80">AI 益智故事</div>
+        <button onClick={onRegen} className="flex h-10 items-center gap-1 rounded-full bg-card px-3 shadow-soft active:scale-95">
+          <RefreshCw className="h-4 w-4 text-primary" />
+          <span className="font-display text-[12px] font-extrabold text-primary">换一个</span>
+        </button>
+      </header>
+
+      <div className="relative flex-1 overflow-y-auto px-4 pb-32 pt-2">
+        <div className={cn("rounded-[28px] bg-gradient-to-br p-5 shadow-card", tabColor)}>
+          <div className="text-5xl">{story.emoji}</div>
+          <div className="mt-1 font-display text-[22px] font-extrabold leading-snug text-foreground">{story.title}</div>
+          <div className="mt-1 text-[11.5px] text-foreground/60">穿插百科小问答 · 边听边学</div>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          {story.segs.map((s, i) =>
+            s.kind === "text" ? (
+              <div key={i} className="rounded-[24px] bg-card/90 p-4 shadow-soft">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-3xl">{s.emoji}</div>
+                  <div className="flex-1">
+                    <div className="leading-tight text-foreground/55 text-[11px] tracking-wide">{s.pinyin}</div>
+                    <div className="font-display text-[17px] font-extrabold leading-relaxed text-foreground">{s.text}</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <QuizCard key={i} seg={s} picked={picks[i]} onPick={(v) => pick(i, v)} />
+            ),
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const QuizCard = ({
+  seg, picked, onPick,
+}: { seg: Extract<Seg, { kind: "quiz" }>; picked: number | undefined; onPick: (i: number) => void }) => {
+  const done = picked !== undefined;
+  const correct = picked === seg.answer;
+  return (
+    <div className="rounded-[24px] bg-[hsl(48_100%_94%)] p-4 shadow-soft">
+      <div className="flex items-center gap-2">
+        <span className="rounded-full bg-[hsl(28_85%_70%)] px-2 py-0.5 font-display text-[10px] font-extrabold text-white">百科问答</span>
+        <Lightbulb className="h-4 w-4 text-[hsl(28_85%_55%)]" />
+      </div>
+      <div className="mt-2 leading-tight text-foreground/55 text-[11px] tracking-wide">{seg.pinyin}</div>
+      <div className="font-display text-[17px] font-extrabold leading-snug text-foreground">{seg.q}</div>
+      <div className="mt-3 grid grid-cols-1 gap-2">
+        {seg.options.map((o, i) => {
+          const isPick = picked === i;
+          const isAns = i === seg.answer;
+          const stateClass = !done
+            ? "bg-white text-foreground/80 active:scale-[0.98]"
+            : isAns
+              ? "bg-[hsl(140_55%_88%)] text-[hsl(140_55%_30%)] ring-2 ring-[hsl(140_55%_60%)]"
+              : isPick
+                ? "bg-[hsl(0_70%_92%)] text-[hsl(0_70%_45%)]"
+                : "bg-white text-foreground/50";
+          return (
+            <button key={i} disabled={done} onClick={() => onPick(i)}
+              className={cn("flex items-center justify-between rounded-2xl px-4 py-3 text-left font-display text-[14.5px] font-extrabold shadow-soft transition", stateClass)}>
+              <span>{o}</span>
+              {done && isAns && <Check className="h-5 w-5" />}
+            </button>
+          );
+        })}
+      </div>
+      {done && (
+        <div className={cn(
+          "mt-3 rounded-xl px-3 py-2 font-display text-[12.5px] font-extrabold",
+          correct ? "bg-[hsl(140_55%_92%)] text-[hsl(140_55%_30%)]" : "bg-[hsl(48_100%_88%)] text-[hsl(28_85%_40%)]",
+        )}>
+          {correct ? "答对啦！🎉 " : "再想想哦～"}{seg.hint}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ---------- 今日话题选择 Sheet ---------- */
+const DailyTopicsSheet = ({
+  selected, onToggle, onClose, onClear,
+}: { selected: string[]; onToggle: (t: string) => void; onClose: () => void; onClear: () => void }) => (
+  <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm animate-fade-in" onClick={onClose} />
+    <div className="relative mx-auto w-full max-w-[480px] rounded-t-[32px] bg-card p-5 shadow-pet animate-fade-in">
+      <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-muted" />
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="font-display text-[18px] font-extrabold text-foreground">今天想听什么呀？</div>
+          <div className="text-[11.5px] text-muted-foreground">每天可以重新挑选感兴趣的话题</div>
+        </div>
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-muted active:scale-90">
+          <X className="h-4 w-4 text-foreground/60" />
+        </button>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {INTEREST_TAGS.map((t) => {
+          const active = selected.includes(t);
+          return (
+            <button
+              key={t}
+              onClick={() => onToggle(t)}
+              className={cn(
+                "rounded-full px-3.5 py-2 font-display text-[13px] font-extrabold transition active:scale-95",
+                active
+                  ? "bg-gradient-primary text-primary-foreground shadow-pop"
+                  : "bg-muted text-foreground/70",
+              )}
+            >
+              {t}
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-5 flex gap-2">
+        <button onClick={onClear} className="h-12 flex-1 rounded-2xl bg-muted font-display text-[14px] font-extrabold text-foreground/70 active:scale-[0.98]">
+          清空
+        </button>
+        <button onClick={onClose} className="h-12 flex-[2] rounded-2xl bg-foreground/90 font-display text-[14px] font-extrabold text-background shadow-pop active:scale-[0.98]">
+          就听这些 ✨
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
 export default Story;
