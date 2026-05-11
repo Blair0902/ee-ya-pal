@@ -256,17 +256,26 @@ const Home = () => {
   );
 };
 
-const ActionButton = ({
-  children, label, color, onClick,
-}: { children: React.ReactNode; label: string; color: string; onClick: () => void }) => (
-  <button onClick={onClick} className="flex flex-col items-center gap-1 active:scale-90">
-    <span className={cn("flex h-12 w-12 items-center justify-center rounded-full shadow-pop", color)}>
-      {children}
+const CartoonAction = ({
+  children, label, emoji, ring, chip, className, onClick,
+}: {
+  children: React.ReactNode; label: string; emoji: string;
+  ring: string; chip: string; className?: string; onClick: () => void;
+}) => (
+  <button onClick={onClick} className={cn("group flex flex-col items-center gap-1 active:scale-90", className)}>
+    <span className={cn("relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br shadow-pop ring-4 ring-white/85 transition-transform group-active:rotate-[-6deg]", ring)}>
+      <span className={cn("flex h-11 w-11 items-center justify-center rounded-full shadow-inner", chip)}>
+        {children}
+      </span>
+      <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-[13px] shadow-soft">
+        {emoji}
+      </span>
     </span>
-    <span className="rounded-full bg-card/90 px-2 py-0.5 font-display text-[10px] font-extrabold text-foreground/80 shadow-soft">
+    <span className="rounded-full bg-white/95 px-2.5 py-0.5 font-display text-[11px] font-extrabold text-foreground/80 shadow-soft">
       {label}
     </span>
   </button>
 );
+
 
 export default Home;
