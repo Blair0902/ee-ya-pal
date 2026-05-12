@@ -253,9 +253,10 @@ const Home = () => {
       <div className="relative z-10">
       {/* 顶栏 */}
       <header className="flex items-center justify-between px-5 pt-4 pt-safe">
-        <button onClick={() => navigate("/me")} aria-label="家长中心"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-soft active:scale-95">
-          <Lock className="h-5 w-5 text-foreground/70" />
+        <button onClick={() => setMode("panorama")} aria-label="返回庄园"
+          className="flex h-10 items-center gap-1 rounded-full bg-card px-3 shadow-soft active:scale-95">
+          <HomeIcon className="h-4 w-4 text-foreground/70" />
+          <span className="font-display text-[11px] font-extrabold text-foreground/70">庄园</span>
         </button>
         <button onClick={() => setIdentityOpen(true)}
           className="flex max-w-[55%] items-center gap-1.5 rounded-full bg-card px-3 py-1.5 shadow-soft active:scale-95">
