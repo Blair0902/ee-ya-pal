@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import siameseVideo from "@/assets/pet-siamese.webm";
 import homeBg from "@/assets/home-bg.jpg";
 import panoramaBg from "@/assets/home-panorama.jpg";
+import panoramaVideo from "@/assets/home-panorama.mp4.asset.json";
 
 type Reaction = { id: number; emoji: string; text: string };
 
@@ -118,9 +119,13 @@ const Home = () => {
     return (
       <PhoneShell>
         <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-          <img
-            src={panoramaBg}
-            alt=""
+          <video
+            src={panoramaVideo.url}
+            poster={panoramaBg}
+            autoPlay
+            loop
+            muted
+            playsInline
             aria-hidden
             className="absolute inset-0 h-full w-full object-cover"
           />
