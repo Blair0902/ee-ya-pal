@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Crown, Mic, Heart, RefreshCw, Drumstick, Droplet, Hand, BookOpen, Sparkles, Moon, Shield } from "lucide-react";
+import { Lock, Crown, Mic, Heart, RefreshCw, Drumstick, Droplet, Hand, BookOpen, Sparkles, Moon, Shield, Home as HomeIcon, Puzzle, Telescope, Gamepad2, HeartHandshake } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { PetSwitcher } from "@/components/PetSwitcher";
 import { VoiceModal } from "@/components/modals/VoiceModal";
@@ -13,6 +13,7 @@ import { loadIdentity, loadKid, KidProfile, Identity } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 import siameseVideo from "@/assets/pet-siamese.webm";
 import homeBg from "@/assets/home-bg.jpg";
+import panoramaBg from "@/assets/home-panorama.jpg";
 
 type Reaction = { id: number; emoji: string; text: string };
 
@@ -27,6 +28,7 @@ const Home = () => {
   const pet = useMemo(() => getPet(petId), [petId]);
   const isSiamese = petId === "cat-siamese";
 
+  const [mode, setMode] = useState<"panorama" | "chat">("panorama");
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [memberOpen, setMemberOpen] = useState(false);
@@ -111,6 +113,128 @@ const Home = () => {
     setPendingLocked(null);
   };
 
+  // —— 全景模式（未召唤）：庄园远景 + 6 个玩具入口 + 召唤按钮 ——
+  if (mode === "panorama") {
+    return (
+      <PhoneShell>
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <img
+            src={panoramaBg}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/60 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[hsl(120_40%_70%)]/60 to-transparent" />
+        </div>
+
+        <div className="relative z-10 flex min-h-screen flex-col">
+          {/* 顶栏 */}
+          <header className="flex items-center justify-between px-5 pt-4 pt-safe">
+            <button onClick={() => navigate("/me")} aria-label="家长中心"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-card/90 shadow-soft active:scale-95">
+              <Lock className="h-5 w-5 text-foreground/70" />
+            </button>
+            <button onClick={() => setIdentityOpen(true)}
+              className="flex max-w-[55%] items-center gap-1.5 rounded-full bg-card/90 px-3 py-1.5 shadow-soft active:scale-95">
+              <span className="text-base">{identity === "parent" ? "🛡️" : "🧒"}</span>
+              <span className="truncate font-display text-[12px] font-extrabold text-foreground/80">
+                {kid?.name ? `Hi，${kid.name}` : "选择身份"}
+              </span>
+            </button>
+            <button onClick={() => setMemberOpen(true)}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-display text-[12px] font-extrabold shadow-soft active:scale-95",
+                member === "none" ? "bg-card/90 text-foreground/70"
+                  : "bg-gradient-to-r from-[hsl(42_100%_70%)] to-[hsl(22_95%_70%)] text-white",
+              )}>
+              <Crown className="h-3.5 w-3.5" />
+              {member === "yearly" ? "年" : member === "monthly" ? "月" : "会员"}
+            </button>
+          </header>
+
+          {/* 中部场景：6 个玩具入口围绕院子 + 远景小宠物 */}
+          <section className="relative flex-1">
+            {/* 远景小宠物（点击也可召唤） */}
+            <button
+              onClick={() => setMode("chat")}
+              aria-label="召唤宠物"
+              className="absolute left-1/2 top-[46%] z-10 -translate-x-1/2 active:scale-95"
+            >
+              <div className="relative">
+                <img
+                  src={pet.images.idle}
+                  alt={pet.name}
+                  draggable={false}
+                  className="h-24 w-24 object-contain drop-shadow-xl animate-float-slow"
+                />
+                <span className="absolute -top-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/90 px-2 py-0.5 font-display text-[10px] font-extrabold text-foreground/80 shadow-soft">
+                  {pet.name}
+                </span>
+              </div>
+            </button>
+
+            {/* 6 个玩具图标入口（散落于院子里） */}
+            <ToyEntry style={{ left: "8%", top: "30%" }} label="故事屋" emoji="📖"
+              ring="from-[hsl(195_85%_88%)] to-[hsl(220_85%_92%)]" chip="bg-[hsl(210_85%_62%)]"
+              onClick={() => navigate("/story")}>
+              <BookOpen className="h-5 w-5 text-white" strokeWidth={2.6} />
+            </ToyEntry>
+            <ToyEntry style={{ right: "8%", top: "26%" }} label="百科探秘" emoji="🔭"
+              ring="from-[hsl(42_95%_88%)] to-[hsl(28_95%_82%)]" chip="bg-[hsl(28_85%_60%)]"
+              onClick={() => navigate("/science")}>
+              <Telescope className="h-5 w-5 text-white" strokeWidth={2.6} />
+            </ToyEntry>
+            <ToyEntry style={{ left: "4%", top: "55%" }} label="思维拼图" emoji="🧩"
+              ring="from-[hsl(258_70%_90%)] to-[hsl(220_70%_92%)]" chip="bg-[hsl(258_55%_62%)]"
+              onClick={() => navigate("/thinking")}>
+              <Puzzle className="h-5 w-5 text-white" strokeWidth={2.6} />
+            </ToyEntry>
+            <ToyEntry style={{ right: "4%", top: "55%" }} label="心情小屋" emoji="💝"
+              ring="from-[hsl(340_95%_92%)] to-[hsl(330_95%_82%)]" chip="bg-[hsl(340_85%_68%)]"
+              onClick={() => navigate("/feelings")}>
+              <HeartHandshake className="h-5 w-5 text-white" strokeWidth={2.6} />
+            </ToyEntry>
+            <ToyEntry style={{ left: "14%", top: "76%" }} label="趣味游戏" emoji="🎮"
+              ring="from-[hsl(140_70%_85%)] to-[hsl(170_70%_88%)]" chip="bg-[hsl(160_60%_45%)]"
+              onClick={() => navigate("/games")}>
+              <Gamepad2 className="h-5 w-5 text-white" strokeWidth={2.6} />
+            </ToyEntry>
+            <ToyEntry style={{ right: "14%", top: "76%" }} label="哄睡晚安" emoji="🌙"
+              ring="from-[hsl(258_70%_90%)] to-[hsl(230_60%_85%)]" chip="bg-[hsl(240_55%_55%)]"
+              onClick={() => navigate("/sleep")}>
+              <Moon className="h-5 w-5 text-white" strokeWidth={2.6} />
+            </ToyEntry>
+          </section>
+
+          {/* 召唤按钮 */}
+          <div className="relative z-10 flex flex-col items-center gap-2 px-5 pb-8">
+            <button
+              onClick={() => setMode("chat")}
+              className="group relative flex items-center gap-2 rounded-full bg-gradient-to-r from-[hsl(28_95%_62%)] via-[hsl(340_85%_65%)] to-[hsl(280_75%_62%)] px-8 py-4 font-display text-lg font-extrabold text-white shadow-pop ring-4 ring-white/70 active:scale-95"
+            >
+              <Sparkles className="h-5 w-5 animate-pulse" />
+              召唤 {pet.name}
+              <Sparkles className="h-5 w-5 animate-pulse" />
+            </button>
+            <span className="rounded-full bg-white/90 px-3 py-1 font-display text-[11px] font-extrabold text-foreground/70 shadow-soft">
+              点击召唤进入对话模式
+            </span>
+          </div>
+        </div>
+
+        <PetSwitcher open={switcherOpen} currentId={petId} member={member}
+          onPick={handlePick} onLockedPick={handleLockedPick} onClose={() => setSwitcherOpen(false)} />
+        <MembershipModal open={memberOpen} onClose={() => setMemberOpen(false)}
+          onSubscribed={onSubscribed} reason={memberReason} />
+        <IdentityModal open={identityOpen} required={!identity}
+          onClose={() => setIdentityOpen(false)}
+          onDone={(id, k) => { setIdentity(id); if (k) setKid(k); setIdentityOpen(false); }} />
+      </PhoneShell>
+    );
+  }
+
+  // —— 对话模式（已召唤）——
   return (
     <PhoneShell>
       {/* 卡通背景：别墅 + 宠物小窝 + 草地 */}
@@ -129,9 +253,10 @@ const Home = () => {
       <div className="relative z-10">
       {/* 顶栏 */}
       <header className="flex items-center justify-between px-5 pt-4 pt-safe">
-        <button onClick={() => navigate("/me")} aria-label="家长中心"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-soft active:scale-95">
-          <Lock className="h-5 w-5 text-foreground/70" />
+        <button onClick={() => setMode("panorama")} aria-label="返回庄园"
+          className="flex h-10 items-center gap-1 rounded-full bg-card px-3 shadow-soft active:scale-95">
+          <HomeIcon className="h-4 w-4 text-foreground/70" />
+          <span className="font-display text-[11px] font-extrabold text-foreground/70">庄园</span>
         </button>
         <button onClick={() => setIdentityOpen(true)}
           className="flex max-w-[55%] items-center gap-1.5 rounded-full bg-card px-3 py-1.5 shadow-soft active:scale-95">
@@ -351,6 +476,31 @@ const PropEntry = ({
       </span>
     </span>
     <span className="font-display text-[11px] font-extrabold text-foreground/80">
+      {label}
+    </span>
+  </button>
+);
+
+const ToyEntry = ({
+  children, label, emoji, ring, chip, onClick, style,
+}: {
+  children: React.ReactNode; label: string; emoji: string;
+  ring: string; chip: string; onClick: () => void; style?: React.CSSProperties;
+}) => (
+  <button
+    onClick={onClick}
+    style={style}
+    className="absolute z-10 flex flex-col items-center gap-1 active:scale-90"
+  >
+    <span className={cn("relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-pop ring-[3px] ring-white/85 transition-transform hover:rotate-[-4deg] animate-float-slow", ring)}>
+      <span className={cn("flex h-9 w-9 items-center justify-center rounded-xl shadow-inner", chip)}>
+        {children}
+      </span>
+      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] shadow-soft">
+        {emoji}
+      </span>
+    </span>
+    <span className="rounded-full bg-white/90 px-2 py-0.5 font-display text-[10px] font-extrabold text-foreground/80 shadow-soft">
       {label}
     </span>
   </button>
