@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Crown, Mic, Heart, RefreshCw, Drumstick, Droplet, Hand } from "lucide-react";
+import { Lock, Crown, Mic, Heart, RefreshCw, Drumstick, Droplet, Hand, BookOpen, Sparkles, Moon, Shield } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { PetSwitcher } from "@/components/PetSwitcher";
 import { VoiceModal } from "@/components/modals/VoiceModal";
@@ -202,8 +202,34 @@ const Home = () => {
         </div>
       </section>
 
+      {/* 道具入口（取代底部 Tab）：点击进入二级页 */}
+      <section className="mt-3 px-5">
+        <div className="flex items-end justify-around rounded-[28px] bg-card/80 px-3 py-3 shadow-soft">
+          <PropEntry label="故事工坊" emoji="📖"
+            ring="from-[hsl(195_85%_88%)] to-[hsl(220_85%_92%)]" chip="bg-[hsl(210_85%_62%)]"
+            onClick={() => navigate("/story")}>
+            <BookOpen className="h-5 w-5 text-white" strokeWidth={2.6} />
+          </PropEntry>
+          <PropEntry label="萌宠图鉴" emoji="✨"
+            ring="from-[hsl(42_95%_88%)] to-[hsl(28_95%_82%)]" chip="bg-[hsl(28_85%_60%)]"
+            onClick={() => navigate("/pokedex")}>
+            <Sparkles className="h-5 w-5 text-white" strokeWidth={2.6} />
+          </PropEntry>
+          <PropEntry label="哄睡" emoji="🌙"
+            ring="from-[hsl(258_70%_90%)] to-[hsl(220_70%_92%)]" chip="bg-[hsl(258_55%_62%)]"
+            onClick={() => navigate("/sleep")}>
+            <Moon className="h-5 w-5 text-white" strokeWidth={2.6} />
+          </PropEntry>
+          <PropEntry label="家长中心" emoji="🛡️"
+            ring="from-[hsl(140_55%_85%)] to-[hsl(170_60%_92%)]" chip="bg-[hsl(160_55%_45%)]"
+            onClick={() => navigate("/me")}>
+            <Shield className="h-5 w-5 text-white" strokeWidth={2.6} />
+          </PropEntry>
+        </div>
+      </section>
+
       {/* 底部交互：长按说话 + 三颗卡通互动按钮，并排 */}
-      <section className="mt-6 px-5">
+      <section className="mt-4 px-5">
         {/* 长按说话（独立一行，更突出） */}
         <div className="flex justify-center">
           <button
