@@ -198,10 +198,17 @@ const Story = () => {
   return (
     <PhoneShell>
       <div className="px-5 pt-4 pt-safe">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-[26px] font-extrabold leading-tight text-foreground">故事工坊</h1>
-            <p className="text-[12px] text-muted-foreground">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            onClick={() => navigate("/home")}
+            aria-label="返回"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-soft active:scale-95"
+          >
+            <ArrowLeft className="h-5 w-5 text-foreground/70" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display text-[22px] font-extrabold leading-tight text-foreground">故事工坊</h1>
+            <p className="truncate text-[12px] text-muted-foreground">
               {kid ? `${kidName}的专属故事屋` : "先让家长设置一下名字哦～"}
             </p>
           </div>
@@ -213,6 +220,7 @@ const Story = () => {
             <Settings2 className="h-5 w-5 text-foreground/60" />
           </button>
         </div>
+
 
         {/* 顶部横向分类 */}
         <div className="mt-4 -mx-5 overflow-x-auto px-5 pb-1" style={{ scrollbarWidth: "none" }}>
