@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Crown, Mic, Heart, RefreshCw, Drumstick, Droplet, Hand, BookOpen, Sparkles, Moon, Shield } from "lucide-react";
+import { Lock, Crown, Mic, Heart, RefreshCw, Drumstick, Droplet, Hand, BookOpen, Sparkles, Moon, Shield, Home as HomeIcon, Puzzle, Telescope, Gamepad2, HeartHandshake } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { PetSwitcher } from "@/components/PetSwitcher";
 import { VoiceModal } from "@/components/modals/VoiceModal";
@@ -13,6 +13,7 @@ import { loadIdentity, loadKid, KidProfile, Identity } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 import siameseVideo from "@/assets/pet-siamese.webm";
 import homeBg from "@/assets/home-bg.jpg";
+import panoramaBg from "@/assets/home-panorama.jpg";
 
 type Reaction = { id: number; emoji: string; text: string };
 
