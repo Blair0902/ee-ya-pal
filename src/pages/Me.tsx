@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Crown, Lock, Moon, FileText, Shield, BarChart3, Bell, ChevronRight, Clock, Flame, MessageCircle,
+  Crown, Lock, Moon, FileText, Shield, BarChart3, Bell, ChevronRight, Clock, Flame, MessageCircle, ArrowLeft,
 } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { MembershipModal } from "@/components/modals/MembershipModal";
@@ -21,8 +21,19 @@ const Me = () => {
   return (
     <PhoneShell>
       <div className="px-5 pt-4 pt-safe pb-8">
-        <h1 className="font-display text-[24px] font-extrabold">家长中心</h1>
-        <p className="text-[12px] text-muted-foreground">陪伴的同时，安心守护</p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/home")}
+            aria-label="返回"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-soft active:scale-95"
+          >
+            <ArrowLeft className="h-5 w-5 text-foreground/70" />
+          </button>
+          <div>
+            <h1 className="font-display text-[22px] font-extrabold">家长中心</h1>
+            <p className="text-[12px] text-muted-foreground">陪伴的同时，安心守护</p>
+          </div>
+        </div>
 
         {/* 会员卡 */}
         <button
