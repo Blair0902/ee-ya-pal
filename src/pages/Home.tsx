@@ -28,6 +28,7 @@ const Home = () => {
   const pet = useMemo(() => getPet(petId), [petId]);
   const isSiamese = petId === "cat-siamese";
 
+  const [mode, setMode] = useState<"panorama" | "chat">("panorama");
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [memberOpen, setMemberOpen] = useState(false);
