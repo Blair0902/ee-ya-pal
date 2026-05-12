@@ -12,6 +12,7 @@ import {
 import { loadIdentity, loadKid, KidProfile, Identity } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 import siameseVideo from "@/assets/pet-siamese.webm";
+import homeBg from "@/assets/home-bg.jpg";
 
 type Reaction = { id: number; emoji: string; text: string };
 
