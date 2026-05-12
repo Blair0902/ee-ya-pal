@@ -480,4 +480,29 @@ const PropEntry = ({
   </button>
 );
 
+const ToyEntry = ({
+  children, label, emoji, ring, chip, onClick, style,
+}: {
+  children: React.ReactNode; label: string; emoji: string;
+  ring: string; chip: string; onClick: () => void; style?: React.CSSProperties;
+}) => (
+  <button
+    onClick={onClick}
+    style={style}
+    className="absolute z-10 flex flex-col items-center gap-1 active:scale-90"
+  >
+    <span className={cn("relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-pop ring-[3px] ring-white/85 transition-transform hover:rotate-[-4deg] animate-float-slow", ring)}>
+      <span className={cn("flex h-9 w-9 items-center justify-center rounded-xl shadow-inner", chip)}>
+        {children}
+      </span>
+      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] shadow-soft">
+        {emoji}
+      </span>
+    </span>
+    <span className="rounded-full bg-white/90 px-2 py-0.5 font-display text-[10px] font-extrabold text-foreground/80 shadow-soft">
+      {label}
+    </span>
+  </button>
+);
+
 export default Home;
