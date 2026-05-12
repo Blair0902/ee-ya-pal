@@ -308,6 +308,7 @@ const Home = () => {
       <IdentityModal open={identityOpen} required={!identity}
         onClose={() => setIdentityOpen(false)}
         onDone={(id, k) => { setIdentity(id); if (k) setKid(k); setIdentityOpen(false); }} />
+      </div>
     </PhoneShell>
   );
 };
