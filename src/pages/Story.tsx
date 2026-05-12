@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Sparkles, SkipBack, SkipForward, Play, Pause, Heart, Lightbulb, Wand2,
-  Settings2, ChevronUp, ChevronDown, X, Check, RefreshCw, CalendarDays,
+  Settings2, ChevronUp, ChevronDown, X, Check, RefreshCw, CalendarDays, ArrowLeft,
 } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { IdentityModal } from "@/components/modals/IdentityModal";
@@ -120,6 +121,7 @@ const buildGenStory = (kidName: string, interestTag: string, tabKey: TabKey): Ge
 };
 
 const Story = () => {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<TabKey>("puzzle");
   const [kid, setKid] = useState<KidProfile | null>(() => loadKid());
   const [identityOpen, setIdentityOpen] = useState(false);
