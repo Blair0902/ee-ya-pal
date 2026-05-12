@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Lock, Diamond, Check, Crown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Lock, Diamond, Check, Crown, ArrowLeft } from "lucide-react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { MembershipModal } from "@/components/modals/MembershipModal";
 import {
@@ -21,6 +22,7 @@ const SECTIONS: {
 ];
 
 const Pokedex = () => {
+  const navigate = useNavigate();
   const [member, setMember] = useState<MemberLevel>(() => loadMember());
   const [current, setCurrent] = useState<PetId>(() => loadPetId());
   const [memberOpen, setMemberOpen] = useState(false);
@@ -46,9 +48,16 @@ const Pokedex = () => {
   return (
     <PhoneShell>
       <div className="px-5 pt-4 pt-safe pb-8">
-        <div className="flex items-end justify-between">
-          <div>
-            <h1 className="font-display text-[24px] font-extrabold">萌宠图鉴</h1>
+        <div className="flex items-end justify-between gap-2">
+          <button
+            onClick={() => navigate("/home")}
+            aria-label="返回"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-soft active:scale-95"
+          >
+            <ArrowLeft className="h-5 w-5 text-foreground/70" />
+          </button>
+          <div className="flex-1">
+            <h1 className="font-display text-[22px] font-extrabold">萌宠图鉴</h1>
             <p className="text-[12px] text-muted-foreground">已收集 {PETS.filter((p) => canUnlock(member, p.tier)).length} / {PETS.length} 只</p>
           </div>
           <button
