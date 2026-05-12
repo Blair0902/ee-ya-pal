@@ -113,6 +113,20 @@ const Home = () => {
 
   return (
     <PhoneShell>
+      {/* 卡通背景：别墅 + 宠物小窝 + 草地 */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        <img
+          src={homeBg}
+          alt=""
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-full w-full object-cover"
+        />
+        {/* 顶部柔化，保证状态栏文字清晰 */}
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[hsl(36_80%_96%)]/80 to-transparent" />
+        {/* 中部柔化，给主角留呼吸 */}
+        <div className="absolute inset-x-0 top-1/4 h-1/3 bg-gradient-to-b from-white/35 to-transparent" />
+      </div>
+      <div className="relative z-10">
       {/* 顶栏 */}
       <header className="flex items-center justify-between px-5 pt-4 pt-safe">
         <button onClick={() => navigate("/me")} aria-label="家长中心"
