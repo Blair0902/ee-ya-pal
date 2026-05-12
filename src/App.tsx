@@ -9,6 +9,10 @@ import Story from "./pages/Story";
 import Sleep from "./pages/Sleep";
 import Pokedex from "./pages/Pokedex";
 import Me from "./pages/Me";
+import Thinking from "./pages/Thinking";
+import Science from "./pages/Science";
+import Feelings from "./pages/Feelings";
+import Games from "./pages/Games";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +30,10 @@ const App = () => (
           <Route path="/sleep" element={<Sleep />} />
           <Route path="/pokedex" element={<Pokedex />} />
           <Route path="/me" element={<Me />} />
+          <Route path="/thinking" element={<Thinking />} />
+          <Route path="/science" element={<Science />} />
+          <Route path="/feelings" element={<Feelings />} />
+          <Route path="/games" element={<Games />} />
           {/* 旧路由兼容 */}
           <Route path="/chat" element={<Navigate to="/home" replace />} />
           <Route path="/quiz" element={<Navigate to="/story" replace />} />
