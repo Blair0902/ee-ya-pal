@@ -319,4 +319,25 @@ const CartoonAction = ({
 );
 
 
+const PropEntry = ({
+  children, label, emoji, ring, chip, onClick,
+}: {
+  children: React.ReactNode; label: string; emoji: string;
+  ring: string; chip: string; onClick: () => void;
+}) => (
+  <button onClick={onClick} className="group flex flex-col items-center gap-1 active:scale-90">
+    <span className={cn("relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-pop ring-[3px] ring-white/85 transition-transform group-active:rotate-[-4deg]", ring)}>
+      <span className={cn("flex h-9 w-9 items-center justify-center rounded-xl shadow-inner", chip)}>
+        {children}
+      </span>
+      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] shadow-soft">
+        {emoji}
+      </span>
+    </span>
+    <span className="font-display text-[11px] font-extrabold text-foreground/80">
+      {label}
+    </span>
+  </button>
+);
+
 export default Home;
